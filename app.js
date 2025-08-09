@@ -22,10 +22,11 @@ app.use(cookieParser());
 import contactRoutes from "./routes/contact.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import adventureRoutes from "./routes/adventure.routes.js";
+import adminRoutes from "./routes/admin.routes.js"
 
 app.use("/api/v1/contact", contactRoutes);
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/adventure", adventureRoutes);
-
+app.use("/api/v1/admin", adminRoutes)
 
 export { app };
