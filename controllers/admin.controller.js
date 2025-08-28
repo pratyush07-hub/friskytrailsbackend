@@ -112,7 +112,7 @@ const getLocationWithBlogs = asyncHandler(async (req, res) => {
 });
 
 
-const getBlogBySlug = asyncHandler(async (req, res) => {
+const getBlogBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
     const blog = await CreateBlog.findOne({ slug });
@@ -123,6 +123,6 @@ const getBlogBySlug = asyncHandler(async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
-});
+};
 
 export { createBlog, createLocation, getLocationWithBlogs, getLocations, getBlogBySlug };

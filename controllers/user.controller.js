@@ -84,7 +84,12 @@ const loginUser = asyncHandler(async (req, res) => {
     "-password -refreshToken"
   );
 
-  const options = getCookieOptions();
+ const options = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production", 
+  sameSite: "None",  
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
 
   return res
     .status(200)
@@ -110,7 +115,12 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 
 const logoutUser = asyncHandler(async (req, res) => {
   const token = req.cookies.accessToken || req.body.accessToken;
-  const options = getCookieOptions();
+  const options = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production", 
+  sameSite: "None", 
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
 
 
   if (!token || !req.user) {
@@ -164,7 +174,10 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       throw new ApiError(401, "refresh token is expired or used");
     }
 
-    const options = getCookieOptions();
+    const options = {
+      httpOnly: true,
+      secure: true,
+    };
 
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
@@ -188,13 +201,3 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 export { registerUser, loginUser, refreshAccessToken, logoutUser, getCurrentUser };
-
-// Consistent cookie options for all operations
-const getCookieOptions = () => ({
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  domain: process.env.NODE_ENV === "production" ? ".vercel.app" : undefined,
-  path: "/"
-});
