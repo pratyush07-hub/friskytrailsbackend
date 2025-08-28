@@ -61,10 +61,57 @@ import adventureRoutes from "./routes/adventure.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import blogRoutes from "./routes/blog.routes.js";
 
+// Add logging for route mounting
+console.log("Mounting routes...");
+
 app.use("/api/v1/contact", contactRoutes);
+console.log("✓ Contact routes mounted");
+
 app.use("/api/v1/user", userRoutes);
+console.log("✓ User routes mounted");
+
 app.use("/api/v1/adventure", adventureRoutes);
+console.log("✓ Adventure routes mounted");
+
 app.use("/api/v1/admin", adminRoutes);
+console.log("✓ Admin routes mounted");
+
 app.use("/api/v1/blog", blogRoutes);
+console.log("✓ Blog routes mounted");
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Global error handler:', err);
+  
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({
+      success: false,
+      message: 'CORS policy violation'
+    });
+  }
+  
+  if (err.name === 'TypeError' && err.message.includes('path-to-regexp')) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid route parameter',
+      error: err.message
+    });
+  }
+  
+  res.status(500).json({
+    success: false,
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+  });
+});
+
+// 404 handler for unmatched routes
+app.use('*', (req, res) => {
+  console.log('404 - Route not found:', req.originalUrl);
+  res.status(404).json({
+    success: false,
+    message: 'Route not found'
+  });
+});
 
 export { app };
