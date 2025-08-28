@@ -1,28 +1,39 @@
 import mongoose from "mongoose";
 
-const createBlogSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  slug: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  content: {
-    type: String,
-    required: true,
+const createBlogSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    intro: String,
+    content: {
+      type: String,
+      required: true,
     },
     image: {
       type: String,
     },
-    authorName:{
-        type: String,
-        required: true,
+    authorName: {
+      type: String,
+      required: true,
     },
-}, {timestamps: true})
+    location: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Location",
+      required: true,
+    },
+    timings: String,
+    highlights: String,
+  },
+  { timestamps: true }
+);
 
 createBlogSchema.pre("save", function (next) {
   if (this.isModified("title")) {
@@ -34,5 +45,5 @@ createBlogSchema.pre("save", function (next) {
   next();
 });
 
-
-export const CreateBlog = mongoose.model("CreateBlog", createBlogSchema)
+export const CreateBlog =
+  mongoose.models.CreateBlog || mongoose.model("CreateBlog", createBlogSchema);

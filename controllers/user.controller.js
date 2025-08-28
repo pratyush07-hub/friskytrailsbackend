@@ -84,12 +84,13 @@ const loginUser = asyncHandler(async (req, res) => {
     "-password -refreshToken"
   );
 
-  const options = {
-    httpOnly: true,
-    secure: true,
-    sameSite: "Lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  };
+ const options = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production", 
+  sameSite: "None",  
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
   return res
     .status(200)
     .cookie("accessToken", accessToken, options)
@@ -115,11 +116,12 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 const logoutUser = asyncHandler(async (req, res) => {
   const token = req.cookies.accessToken || req.body.accessToken;
   const options = {
-    httpOnly: true,
-    secure: true,
-    sameSite: "Lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  };
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production", 
+  sameSite: "None", 
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
 
   if (!token || !req.user) {
     return res
