@@ -38,11 +38,6 @@ const validateSlug = (req, res, next) => {
   }
 };
 
-// Add error handling wrapper
-const asyncHandler = (fn) => (req, res, next) => {
-  Promise.resolve(fn(req, res, next)).catch(next);
-};
-
-router.get("/:slug", validateSlug, asyncHandler(getBlogBySlug));
+router.get("/:slug", validateSlug, getBlogBySlug);
 
 export default router;

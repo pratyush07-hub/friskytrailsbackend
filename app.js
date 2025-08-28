@@ -1,15 +1,23 @@
 import express from "express";
-const app = express();
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
-// import { app } from "./app.js";
 
+// Import routes at the top
+import contactRoutes from "./routes/contact.routes.js";
+import userRoutes from "./routes/user.routes.js";
+import adventureRoutes from "./routes/adventure.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
+import blogRoutes from "./routes/blog.routes.js";
+
+// Load environment variables
 dotenv.config({
   path: ".env",
 });
 
-// CORS configuration for Vercel deployment
+const app = express();
+
+// CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
@@ -41,45 +49,65 @@ const corsOptions = {
   exposedHeaders: ["Set-Cookie"]
 };
 
-app.use(
-  cors(corsOptions)
-);
+// Apply CORS
+app.use(cors(corsOptions));
 
-app.options("*", cors()); 
+// Pre-flight requests
+app.options("*", cors(corsOptions));
 
+// Body parsing middleware
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 
-// app.options("*", cors());
-
+// Static files and cookies
 app.use(express.static("public"));
 app.use(cookieParser());
 
-import contactRoutes from "./routes/contact.routes.js";
-import userRoutes from "./routes/user.routes.js";
-import adventureRoutes from "./routes/adventure.routes.js";
-import adminRoutes from "./routes/admin.routes.js";
-import blogRoutes from "./routes/blog.routes.js";
-
-// Add logging for route mounting
+// Mount routes
 console.log("Mounting routes...");
 
-app.use("/api/v1/contact", contactRoutes);
-console.log("✓ Contact routes mounted");
+// Test route to verify basic routing works
+app.get("/test", (req, res) => {
+  res.json({ message: "Test route working" });
+});
+console.log("✓ Test route mounted");
 
-app.use("/api/v1/user", userRoutes);
-console.log("✓ User routes mounted");
+try {
+  app.use("/api/v1/contact", contactRoutes);
+  console.log("✓ Contact routes mounted");
+} catch (error) {
+  console.error("❌ Error mounting contact routes:", error);
+}
 
-app.use("/api/v1/adventure", adventureRoutes);
-console.log("✓ Adventure routes mounted");
+try {
+  app.use("/api/v1/user", userRoutes);
+  console.log("✓ User routes mounted");
+} catch (error) {
+  console.error("❌ Error mounting user routes:", error);
+}
 
-app.use("/api/v1/admin", adminRoutes);
-console.log("✓ Admin routes mounted");
+try {
+  app.use("/api/v1/adventure", adventureRoutes);
+  console.log("✓ Adventure routes mounted");
+} catch (error) {
+  console.error("❌ Error mounting adventure routes:", error);
+}
 
-app.use("/api/v1/blog", blogRoutes);
-console.log("✓ Blog routes mounted");
+try {
+  app.use("/api/v1/admin", adminRoutes);
+  console.log("✓ Admin routes mounted");
+} catch (error) {
+  console.error("❌ Error mounting admin routes:", error);
+}
 
-// Error handling middleware
+try {
+  app.use("/api/v1/blog", blogRoutes);
+  console.log("✓ Blog routes mounted");
+} catch (error) {
+  console.error("❌ Error mounting blog routes:", error);
+}
+
+// Global error handling middleware
 app.use((err, req, res, next) => {
   console.error('Global error handler:', err);
   
