@@ -24,13 +24,21 @@ const createBlogSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    location: {
+    country: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Location",
+      ref: "Country",
       required: true,
     },
-    timings: String,
-    highlights: String,
+    state: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "State",
+      required: true,
+    },
+    city: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "City",
+      required: true,
+    }
   },
   { timestamps: true }
 );

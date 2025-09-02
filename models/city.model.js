@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const locationSchema = new mongoose.Schema(
+const citySchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -13,17 +13,16 @@ const locationSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    description: {
-      type: String,
-    },
     image: {
       type: String,
     },
+    country: { type: mongoose.Schema.Types.ObjectId, ref: "Country" },
+    state: { type: mongoose.Schema.Types.ObjectId, ref: "State" },
   },
   { timestamps: true }
 );
 
-locationSchema.pre("save", function (next) {
+citySchema.pre("save", function (next) {
   if (this.isModified("name")) {
     this.slug = this.name
       .toLowerCase()
@@ -32,5 +31,4 @@ locationSchema.pre("save", function (next) {
   }
   next();
 });
-
-export const Location = mongoose.models.Location || mongoose.model("Location", locationSchema);
+export const City = mongoose.models.City || mongoose.model("City", citySchema);

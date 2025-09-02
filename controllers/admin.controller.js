@@ -1,20 +1,30 @@
+import { Country } from "../models/country.model.js";
 import { CreateBlog } from "../models/create-blog.model.js";
-import { Location } from "../models/location.model.js";
+import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const createBlog = asyncHandler(async (req, res) => {
   try {
-    const { title, content, slug, authorName, location } = req.body;
+    const {
+      title,
+      slug,
+      intro,
+      content,
+      authorName,
+      country,
+      state,
+      city,
+    } = req.body;
 
-    if (!title || !content || !slug || !authorName || !location) {
+    // Validate required fields
+    if (!title || !slug || !content || !authorName || !country || !state || !city) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    let imageUrl = "";
-
     // Upload image if provided
+    let imageUrl = "";
     if (req.file) {
       const localPath = req.file.path;
       const uploadResult = await uploadOnCloudinary(localPath);
@@ -24,27 +34,30 @@ const createBlog = asyncHandler(async (req, res) => {
       imageUrl = uploadResult.secure_url;
     }
 
+    // Create the blog
     const newBlog = await CreateBlog.create({
       title,
       slug,
+      intro,
       content,
       image: imageUrl,
       authorName,
-      location,
+      country,
+      state,
+      city,
     });
 
-    res
-      .status(201)
-      .json(new ApiResponse(201, newBlog, "Blog created successfully"));
+    res.status(201).json(new ApiResponse(201, newBlog, "Blog created successfully"));
   } catch (error) {
     console.error("Error creating blog:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
 
-const createLocation = asyncHandler(async (req, res) => {
+
+const createCountry = asyncHandler(async (req, res) => {
   try {
-    const { name, slug, description } = req.body;
+    const { name, slug } = req.body;
 
     if (!name || !slug) {
       return res.status(400).json({ message: "Name and slug are required" });
@@ -61,68 +74,97 @@ const createLocation = asyncHandler(async (req, res) => {
       imageUrl = uploadResult.secure_url;
     }
 
-    const newLocation = await Location.create({
+    const newCountry = await Country.create({
       name,
       slug,
-      description,
       image: imageUrl,
     });
 
     res
       .status(201)
-      .json(new ApiResponse(201, newLocation, "Location created successfully"));
+      .json(new ApiResponse(201, newCountry, "Country created successfully"));
   } catch (error) {
-    console.error("Error creating location:", error);
+    console.error("Error creating country:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
 
-const getLocations = asyncHandler(async (req, res) => {
+const getCountries = asyncHandler(async (req, res) => {
   try {
-    const locations = await Location.find().select("name slug image description createdAt");
+    const countries = await Country.find().select("name slug image createdAt");
 
     res
       .status(200)
-      .json(new ApiResponse(200, locations, "Locations fetched successfully"));
+      .json(new ApiResponse(200, countries, "Countries fetched successfully"));
   } catch (error) {
-    console.error("Error fetching locations:", error);
+    console.error("Error fetching countries:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
 
-
-const getLocationWithBlogs = asyncHandler(async (req, res) => {
+export const getCountryBySlug = asyncHandler(async (req, res) => {
   try {
     const { slug } = req.params;
-    const location = await Location.findOne({ slug });
-    if (!location) {
-      return res.status(404).json({ message: "Location not found" });
+
+    if (!slug) {
+      throw new ApiError(400, "Slug is required");
     }
-    const blogs = await CreateBlog.find({ location: location._id }).select(
-      "title slug image authorName createdAt"
-    );
+
+    const country = await Country.findOne({ slug }).select("name slug image createdAt");
+
+    if (!country) {
+      throw new ApiError(404, "Country not found");
+    }
 
     res
       .status(200)
-      .json(new ApiResponse(200, { location, blogs }, "Location details fetched"));
+      .json(new ApiResponse(200, country, "Country fetched successfully"));
   } catch (error) {
-    console.error("Error fetching location:", error);
+    console.error("Error fetching country by slug:", error);
     res.status(500).json({ message: "Internal server error" });
   }
+});
+
+const getCountryWithBlogs = asyncHandler(async (req, res) => {
+  const { slug } = req.params;
+
+  const country = await Country.findOne({ slug }).select("name slug image");
+  if (!country) {
+    throw new ApiError(404, "Country not found");
+  }
+
+  const blogs = await CreateBlog.find({ country: country._id })
+    .populate("state", "name slug")
+    .populate("city", "name slug")
+    .select("title slug image content authorName state city createdAt");
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, { country, blogs }, "Country with blogs fetched successfully"));
 });
 
 
 const getBlogBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
-    const blog = await CreateBlog.findOne({ slug });
+
+    const blog = await CreateBlog.findOne({ slug })
+      .populate("country", "name slug") 
+      .populate("state", "name slug")
+      .populate("city", "name slug");
+
     if (!blog) {
       return res.status(404).json({ message: "Blog not found" });
     }
-    res.status(200).json(new ApiResponse(200, blog, "Blog fetched successfully"));
+
+    res.status(200).json(
+      new ApiResponse(200, blog, "Blog fetched successfully")
+    );
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
 
-export { createBlog, createLocation, getLocationWithBlogs, getLocations, getBlogBySlug };
+export { createBlog, createCountry, getCountryWithBlogs, getCountries, getBlogBySlug };

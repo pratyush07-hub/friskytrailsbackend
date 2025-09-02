@@ -42,3 +42,12 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
     throw new ApiError(401, error?.message || "Invalid Access Token");
   }
 });
+
+
+export const verifyAdmin = (req, res, next) => {
+  if (req.user && req.user.admin === true) {
+    next();
+  } else {
+    throw new ApiError(403, "Admin access only");
+  }
+};
