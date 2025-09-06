@@ -15,6 +15,13 @@ const allowedOrigins = [
   process.env.CORS_ORIGIN,
 ];
 
+app.use((req, res, next) => {
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  res.setHeader("Cross-Origin-Embedder-Policy", "unsafe-none");
+  next();
+});
+
+
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -48,7 +55,7 @@ import blogRoutes from "./routes/blog.routes.js";
 
 app.use("/api/v1/contact", contactRoutes);
 app.use("/api/v1/user", userRoutes);
-app.use("/api/v1/adventure", adventureRoutes);
+app.use("/api/v1", adventureRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/blog", blogRoutes);
 

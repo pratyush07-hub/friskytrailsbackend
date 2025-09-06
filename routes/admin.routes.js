@@ -4,6 +4,7 @@ import { createBlog, createCountry, getCountries, getCountryBySlug, getCountryWi
 import { upload } from "../middlewares/multer.middleware.js";
 import { createState, getStates, getStateWithBlogs } from "../controllers/state.controller.js";
 import { createCity, getCities, getCityWithBlogs } from "../controllers/city.controller.js";
+import { createProduct, deleteProduct, getProductBySlug, getProducts, updateProduct } from "../controllers/product.controller.js";
 
 const router = Router();
 
@@ -19,5 +20,12 @@ router.get("/country/:slug", verifyJWT, getCountryBySlug);
 router.get("/country/:slug/blogs", getCountryWithBlogs);
 router.get("/state/:slug/blogs", getStateWithBlogs);
 router.get("/city/:slug/blogs", getCityWithBlogs);
+
+router.post("/create-product", upload.single("image"), verifyJWT, verifyAdmin, createProduct);
+
+router.get("/products", getProducts);
+router.get("/product/:slug", getProductBySlug);
+router.put("/product/:slug",upload.single("image"),verifyJWT,verifyAdmin,updateProduct);
+router.delete("/product/:slug", verifyJWT, verifyAdmin, deleteProduct);
 
 export default router;
