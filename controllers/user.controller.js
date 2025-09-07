@@ -224,7 +224,7 @@ const googleAuth = asyncHandler(async (req, res) => {
     const ticket = await client.verifyIdToken({
       idToken: id_token,
       audience: process.env.GOOGLE_CLIENT_ID,
-      // clockTolerance: 5 * 60,
+      clockTolerance: 5 * 60,
     });
     const payload = ticket.getPayload();
 
