@@ -21,11 +21,10 @@ router.get("/country/:slug/blogs", getCountryWithBlogs);
 router.get("/state/:slug/blogs", getStateWithBlogs);
 router.get("/city/:slug/blogs", getCityWithBlogs);
 
-router.post("/create-product", upload.single("image"), verifyJWT, verifyAdmin, createProduct);
-
+router.post("/create-product", upload.array("images", 5), createProduct, verifyJWT, verifyAdmin);
 router.get("/products", getProducts);
 router.get("/product/:slug", getProductBySlug);
-router.put("/product/:slug",upload.single("image"),verifyJWT,verifyAdmin,updateProduct);
-router.delete("/product/:slug", verifyJWT, verifyAdmin, deleteProduct);
+router.put("/product/:slug", upload.array("images", 5), updateProduct, verifyJWT, verifyAdmin);
+router.delete("/product/:slug", deleteProduct);
 
 export default router;
