@@ -4,9 +4,9 @@ import { ApiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const hotelBooking = asyncHandler(async (req, res) => {
-    const { city, property, checkInDate, checkOutDate, guests, price } = req.body;
+    const { city, budget, checkInDate, checkOutDate, guests, price } = req.body;
     if (
-        [city, property, checkInDate, checkOutDate, guests].some((field) =>
+        [city, budget, checkInDate, checkOutDate, guests].some((field) =>
             field === undefined || (typeof field === 'string' && field.trim() === "")
         )
     ) {
@@ -15,7 +15,7 @@ const hotelBooking = asyncHandler(async (req, res) => {
     const hotelBooking = new HotelBooking({
         user: req.user._id,
         city,
-        property,
+        budget,
         checkInDate,
         checkOutDate,
         guests,

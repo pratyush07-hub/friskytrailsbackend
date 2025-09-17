@@ -5,6 +5,7 @@ import { upload } from "../middlewares/multer.middleware.js";
 import { createState, getStates, getStateWithBlogs } from "../controllers/state.controller.js";
 import { createCity, getCities, getCityWithBlogs } from "../controllers/city.controller.js";
 import { createProduct, deleteProduct, getProductBySlug, getProducts, updateProduct } from "../controllers/product.controller.js";
+import { createBooking, getAllBookings, getBookingsByProduct } from "../controllers/booking.controller.js";
 
 const router = Router();
 
@@ -26,5 +27,9 @@ router.get("/products", getProducts);
 router.get("/product/:slug", getProductBySlug);
 router.put("/product/:slug", upload.array("images", 5), updateProduct, verifyJWT, verifyAdmin);
 router.delete("/product/:slug", deleteProduct);
+
+router.post("/bookings", createBooking);
+router.get("/bookings", getAllBookings);
+router.get("/bookings/:slug", getBookingsByProduct);
 
 export default router;
