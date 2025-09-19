@@ -28,8 +28,8 @@ router.get("/product/:slug", getProductBySlug);
 router.put("/product/:slug", upload.array("images", 5), updateProduct, verifyJWT, verifyAdmin);
 router.delete("/product/:slug", deleteProduct);
 
-router.post("/bookings", createBooking);
-router.get("/bookings", getAllBookings);
-router.get("/bookings/:slug", getBookingsByProduct);
+router.post("/bookings", verifyJWT, createBooking);
+router.get("/bookings", verifyJWT, verifyAdmin, getAllBookings);
+router.get("/bookings/:slug", verifyJWT, verifyAdmin, getBookingsByProduct);
 
 export default router;
