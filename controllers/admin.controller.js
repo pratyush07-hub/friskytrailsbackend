@@ -7,10 +7,10 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const createBlog = asyncHandler(async (req, res) => {
   try {
-    const { title, slug, authorName, country, state, city, blocks } = req.body;
+    const { title, slug, authorName, country, state, city, blocks, intro, conclusion } = req.body;
 
     // Validate required fields
-    if (!title || !slug || !authorName || !country || !state || !city || !blocks) {
+    if (!title || !slug || !authorName || !country || !state || !city || !blocks || !intro || !conclusion) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -38,7 +38,7 @@ const createBlog = asyncHandler(async (req, res) => {
     // Normalize blocks
     const updatedBlocks = parsedBlocks.map((block, idx) => ({
       order: Number(block.order) || idx + 1, // fallback: use array index
-      intro: block.intro || "",
+      heading: block.heading || "",
       content: block.content || "",
       image: block.image || "",
     }));
@@ -47,6 +47,8 @@ const createBlog = asyncHandler(async (req, res) => {
     const newBlog = await CreateBlog.create({
       title,
       slug,
+      intro,
+      conclusion,
       authorName,
       country,
       state,

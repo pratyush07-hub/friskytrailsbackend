@@ -6,8 +6,8 @@ const contentBlockSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    intro: {
-      type: String, // renamed from shortIntro to match frontend
+    heading: {
+      type: String,
     },
     content: {
       type: String,
@@ -32,6 +32,9 @@ const createBlogSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    intro: {
+      type: String,
+    },
     authorName: {
       type: String,
       required: true,
@@ -52,6 +55,9 @@ const createBlogSchema = new mongoose.Schema(
       required: true,
     },
     coverImage: {
+      type: String,
+    },
+    conclusion: {
       type: String,
     },
     blocks: {
