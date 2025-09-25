@@ -2,17 +2,20 @@ import { Booking } from "../models/booking.model.js";
 
 const createBooking = async (req, res) => {
   try {
-    const { name, email, date, guests, productSlug } = req.body;
+    const { name, email, mobile, date, guest, message, productSlug } = req.body;
 
-    if (!name || !email || !date || !guests || !productSlug) {
-      return res.status(400).json({ message: "All fields are required" });
+    // Validation
+    if (!name || !email || !mobile || !date || !guest || !productSlug) {
+      return res.status(400).json({ message: "All required fields must be filled" });
     }
 
     const booking = new Booking({
       name,
       email,
+      mobile,
       date,
-      guests,
+      guest,
+      message,
       productSlug,
     });
 
@@ -25,7 +28,6 @@ const createBooking = async (req, res) => {
   }
 };
 
-
 const getAllBookings = async (req, res) => {
   try {
     const bookings = await Booking.find().sort({ createdAt: -1 });
@@ -35,7 +37,6 @@ const getAllBookings = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 const getBookingsByProduct = async (req, res) => {
   try {
@@ -47,6 +48,5 @@ const getBookingsByProduct = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 export { createBooking, getAllBookings, getBookingsByProduct };

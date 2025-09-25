@@ -1,15 +1,17 @@
 import { Router } from "express";
 import { verifyAdmin, verifyJWT } from "../middlewares/auth.middleware.js";
-import { createBlog, createCountry, getCountries, getCountryBySlug, getCountryWithBlogs } from "../controllers/admin.controller.js";
+import { createBlog, createCountry, getCountries, getCountryBySlug, getCountryWithBlogs, uploadEditorImage } from "../controllers/admin.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { createState, getStates, getStateWithBlogs } from "../controllers/state.controller.js";
 import { createCity, getCities, getCityWithBlogs } from "../controllers/city.controller.js";
 import { createProduct, deleteProduct, getProductBySlug, getProducts, updateProduct } from "../controllers/product.controller.js";
 import { createBooking, getAllBookings, getBookingsByProduct } from "../controllers/booking.controller.js";
+import { createProductType, getAllProductTypes, getProductTypeBySlug, getProductTypeBySlugWithProduct } from "../controllers/productType.controller.js";
 
 const router = Router();
 
-router.route("/create-blog").post(upload.single("image"),verifyJWT,verifyAdmin, createBlog)
+router.route("/create-blog").post(upload.single("image"), verifyJWT, verifyAdmin, createBlog)
+router.post("/upload-editor-image", upload.single("image"), verifyJWT, verifyAdmin, uploadEditorImage);
 router.post("/create-country", upload.single("image"), verifyJWT, verifyAdmin, createCountry);
 router.get("/country/:slug", verifyJWT, getCountries);
 router.post("/create-state", upload.single("image"), verifyJWT, verifyAdmin, createState);
@@ -31,5 +33,11 @@ router.delete("/product/:slug", deleteProduct);
 router.post("/bookings", verifyJWT, createBooking);
 router.get("/bookings", verifyJWT, verifyAdmin, getAllBookings);
 router.get("/bookings/:slug", verifyJWT, verifyAdmin, getBookingsByProduct);
+
+router.post("/create-productType", upload.single("image"), verifyJWT, verifyAdmin, createProductType);
+router.get("/productTypes/:slug", getProductTypeBySlug);
+router.get("/productTypes/:slug/product", getProductTypeBySlugWithProduct);
+router.get("/all-productTypes", getAllProductTypes);
+
 
 export default router;

@@ -12,14 +12,24 @@ const bookingSchema = new mongoose.Schema({
     lowercase: true,
     trim: true,
   },
+  mobile: {
+    type: String,
+    required: true,
+    match: /^[6-9]\d{9}$/, 
+  },
   date: {
     type: Date,
     required: true,
   },
-  guests: {
+  guest: {
     type: Number,
     required: true,
     min: 1,
+  },
+  message: {
+    type: String,
+    trim: true,
+    default: "",
   },
   productSlug: {
     type: String,
@@ -29,7 +39,7 @@ const bookingSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-  }
+  },
 });
 
 export const Booking = mongoose.model("Booking", bookingSchema);

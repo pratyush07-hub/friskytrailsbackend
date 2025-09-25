@@ -7,52 +7,67 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const createBlog = asyncHandler(async (req, res) => {
   try {
-    const {
-      title,
-      slug,
-      intro,
-      content,
-      authorName,
-      country,
-      state,
-      city,
-    } = req.body;
+    const { title, slug, authorName, country, state, city, blocks } = req.body;
 
     // Validate required fields
-    if (!title || !slug || !content || !authorName || !country || !state || !city) {
+    if (!title || !slug || !authorName || !country || !state || !city || !blocks) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // Upload image if provided
-    let imageUrl = "";
-    if (req.file) {
-      const localPath = req.file.path;
-      const uploadResult = await uploadOnCloudinary(localPath);
-      if (!uploadResult) {
-        return res.status(500).json({ message: "Image upload failed" });
+    // Parse blocks if sent as string (form-data)
+    let parsedBlocks = blocks;
+    if (typeof blocks === "string") {
+      try {
+        parsedBlocks = JSON.parse(blocks);
+      } catch (err) {
+        return res.status(400).json({ message: "Invalid blocks format" });
       }
-      imageUrl = uploadResult.secure_url;
     }
 
-    // Create the blog
+    if (!Array.isArray(parsedBlocks) || parsedBlocks.length === 0) {
+      return res.status(400).json({ message: "At least one content block is required" });
+    }
+
+    // Handle optional cover image upload
+    let coverImageUrl = "";
+    if (req.file) {
+      const uploadResult = await uploadOnCloudinary(req.file.path);
+      coverImageUrl = uploadResult?.secure_url || "";
+    }
+
+    // Normalize blocks
+    const updatedBlocks = parsedBlocks.map((block, idx) => ({
+      order: Number(block.order) || idx + 1, // fallback: use array index
+      intro: block.intro || "",
+      content: block.content || "",
+      image: block.image || "",
+    }));
+
+    // Create blog
     const newBlog = await CreateBlog.create({
       title,
       slug,
-      intro,
-      content,
-      image: imageUrl,
       authorName,
       country,
       state,
       city,
+      coverImage: coverImageUrl,
+      blocks: updatedBlocks,
     });
 
-    res.status(201).json(new ApiResponse(201, newBlog, "Blog created successfully"));
+    res.status(201).json({
+      status: true,
+      data: newBlog,
+      message: "✅ Blog created successfully",
+    });
   } catch (error) {
     console.error("Error creating blog:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
+
+
 
 
 const createCountry = asyncHandler(async (req, res) => {
@@ -147,24 +162,44 @@ const getCountryWithBlogs = asyncHandler(async (req, res) => {
 const getBlogBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
+    if (!slug) return res.status(400).json({ status: false, message: "Slug parameter is required" });
 
     const blog = await CreateBlog.findOne({ slug })
-      .populate("country", "name slug") 
+      .populate("country", "name slug")
       .populate("state", "name slug")
-      .populate("city", "name slug");
+      .populate("city", "name slug")
+      .lean();
 
-    if (!blog) {
-      return res.status(404).json({ message: "Blog not found" });
+    if (!blog) return res.status(404).json({ status: false, message: "Blog not found" });
+
+    if (blog.blocks && blog.blocks.length > 0) {
+      blog.blocks.sort((a, b) => a.order - b.order);
     }
 
-    res.status(200).json(
-      new ApiResponse(200, blog, "Blog fetched successfully")
-    );
+    res.status(200).json({ status: true, data: blog, message: "Blog fetched successfully" });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
+    console.error("Error fetching blog:", error);
+    res.status(500).json({ status: false, message: "Server error", error: error.message });
   }
 };
 
-export { createBlog, createCountry, getCountryWithBlogs, getCountries, getBlogBySlug };
+
+
+// Upload single image from rich text editor
+const uploadEditorImage = asyncHandler(async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ status: false, message: "No file uploaded" });
+    }
+    const uploadResult = await uploadOnCloudinary(req.file.path);
+    if (!uploadResult?.secure_url) {
+      return res.status(500).json({ status: false, message: "Image upload failed" });
+    }
+    return res.status(201).json({ status: true, url: uploadResult.secure_url });
+  } catch (error) {
+    console.error("Editor image upload error:", error);
+    return res.status(500).json({ status: false, message: "Server error" });
+  }
+});
+
+export { createBlog, createCountry, getCountryWithBlogs, getCountries, getBlogBySlug, uploadEditorImage };

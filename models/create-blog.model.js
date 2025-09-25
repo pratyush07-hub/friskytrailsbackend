@@ -1,5 +1,25 @@
 import mongoose from "mongoose";
 
+const contentBlockSchema = new mongoose.Schema(
+  {
+    order: {
+      type: Number,
+      required: true,
+    },
+    intro: {
+      type: String, // renamed from shortIntro to match frontend
+    },
+    content: {
+      type: String,
+      required: true,
+    },
+    image: {
+      type: String, // optional: you can add block-level images later
+    },
+  },
+  { _id: false }
+);
+
 const createBlogSchema = new mongoose.Schema(
   {
     title: {
@@ -11,14 +31,6 @@ const createBlogSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-    },
-    intro: String,
-    content: {
-      type: String,
-      required: true,
-    },
-    image: {
-      type: String,
     },
     authorName: {
       type: String,
@@ -38,11 +50,19 @@ const createBlogSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "City",
       required: true,
-    }
+    },
+    coverImage: {
+      type: String,
+    },
+    blocks: {
+      type: [contentBlockSchema],
+      validate: (v) => Array.isArray(v) && v.length > 0, // must have at least one block
+    },
   },
   { timestamps: true }
 );
 
+// Auto-generate slug if title is updated
 createBlogSchema.pre("save", function (next) {
   if (this.isModified("title")) {
     this.slug = this.title
