@@ -236,7 +236,7 @@ const googleAuth = asyncHandler(async (req, res) => {
         lastName: payload.family_name || "",
         userName: payload.email.split("@")[0],
         email: payload.email.toLowerCase(),
-        password: null,
+        password: "hegvebhe##23@@1223",
       });
       await user.save({ validateBeforeSave: false });
     }

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyAdmin, verifyJWT } from "../middlewares/auth.middleware.js";
-import { createBlog, createCountry, getCountries, getCountryBySlug, getCountryWithBlogs, uploadEditorImage } from "../controllers/admin.controller.js";
+import { createBlog, createCountry, getAllBlogs, getBlogById, getCountries, getCountryBySlug, getCountryWithBlogs, updateBlog, uploadEditorImage } from "../controllers/admin.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { createState, getStates, getStateWithBlogs } from "../controllers/state.controller.js";
 import { createCity, getCities, getCityWithBlogs } from "../controllers/city.controller.js";
@@ -11,6 +11,10 @@ import { createProductType, getAllProductTypes, getProductTypeBySlug, getProduct
 const router = Router();
 
 router.route("/create-blog").post(upload.single("image"), verifyJWT, verifyAdmin, createBlog)
+router.route("/blogs").get(verifyJWT, verifyAdmin, getAllBlogs);
+router.route("/blog/:id").get(verifyJWT, verifyAdmin, getBlogById);
+router.put("/blog/:id", upload.single("image"), verifyJWT, verifyAdmin, updateBlog);
+
 router.post("/upload-editor-image", upload.single("image"), verifyJWT, verifyAdmin, uploadEditorImage);
 router.post("/create-country", upload.single("image"), verifyJWT, verifyAdmin, createCountry);
 router.get("/country/:slug", verifyJWT, getCountries);
@@ -30,7 +34,7 @@ router.get("/product/:slug", getProductBySlug);
 router.put("/product/:slug", upload.array("images", 5), updateProduct, verifyJWT, verifyAdmin);
 router.delete("/product/:slug", deleteProduct);
 
-router.post("/bookings", verifyJWT, createBooking);
+router.post("/bookings", verifyJWT, verifyAdmin, createBooking);
 router.get("/bookings", verifyJWT, verifyAdmin, getAllBookings);
 router.get("/bookings/:slug", verifyJWT, verifyAdmin, getBookingsByProduct);
 

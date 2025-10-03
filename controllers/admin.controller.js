@@ -68,6 +68,36 @@ const createBlog = asyncHandler(async (req, res) => {
   }
 });
 
+const getAllBlogs = asyncHandler(async (req, res) => {
+  try {
+    // Fetch all blogs (latest first)
+    const blogs = await CreateBlog.find()
+      .sort({ createdAt: -1 })
+      .select("title slug authorName coverImage country state city intro createdAt") // select only needed fields
+      .lean();
+
+    // Handle empty case
+    if (!blogs || blogs.length === 0) {
+      return res.status(404).json({
+        status: false,
+        message: "No blogs found",
+      });
+    }
+
+    // Return response
+    res.status(200).json({
+      status: true,
+      count: blogs.length,
+      data: blogs,
+    });
+  } catch (error) {
+    console.error("Error fetching blogs:", error);
+    res.status(500).json({
+      status: false,
+      message: "Internal server error",
+    });
+  }
+});
 
 
 
@@ -184,7 +214,46 @@ const getBlogBySlug = async (req, res) => {
     res.status(500).json({ status: false, message: "Server error", error: error.message });
   }
 };
+const getBlogById = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
 
+    const blog = await CreateBlog.findById(id)
+      .populate("country", "name")
+      .populate("state", "name")
+      .populate("city", "name");
+
+    if (!blog) {
+      return res.status(404).json({ status: false, message: "Blog not found" });
+    }
+
+    // Transform for frontend
+    const frontendBlog = {
+      id: blog._id,
+      title: blog.title,
+      slug: blog.slug,
+      intro: blog.intro,
+      conclusion: blog.conclusion,
+      authorName: blog.authorName,
+      country: blog.country?.name || "",
+      state: blog.state?.name || "",
+      city: blog.city?.name || "",
+      coverImage: blog.coverImage,
+      blocks: blog.blocks.map((block) => ({
+        id: block._id || block.id,
+        order: block.order,
+        heading: block.heading,
+        content: block.content,
+        image: block.image || "",
+      })),
+    };
+
+    res.status(200).json({ status: true, data: frontendBlog });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: false, message: "Server error" });
+  }
+});
 
 
 // Upload single image from rich text editor
@@ -204,4 +273,62 @@ const uploadEditorImage = asyncHandler(async (req, res) => {
   }
 });
 
-export { createBlog, createCountry, getCountryWithBlogs, getCountries, getBlogBySlug, uploadEditorImage };
+const updateBlog = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      title,
+      slug,
+      intro,
+      conclusion,
+      authorName,
+      country,
+      state,
+      city,
+      blocks,
+    } = req.body;
+
+    const blog = await CreateBlog.findById(id);
+    if (!blog) return res.status(404).json({ status: false, message: "Blog not found" });
+
+    // Update cover image if new file
+    if (req.file) {
+      const uploadResult = await uploadOnCloudinary(req.file.path);
+      blog.coverImage = uploadResult?.secure_url || blog.coverImage;
+    }
+
+    // Update fields
+    blog.title = title || blog.title;
+    blog.slug = slug || blog.slug;
+    blog.intro = intro || blog.intro;
+    blog.conclusion = conclusion || blog.conclusion;
+    blog.authorName = authorName || blog.authorName;
+    blog.country = country || blog.country;
+    blog.state = state || blog.state;
+    blog.city = city || blog.city;
+
+    // Update blocks
+    if (blocks) {
+      let parsedBlocks = blocks;
+      if (typeof blocks === "string") parsedBlocks = JSON.parse(blocks);
+
+      blog.blocks = parsedBlocks.map((block, idx) => ({
+        order: Number(block.order) || idx + 1,
+        heading: block.heading || "",
+        content: block.content || "",
+        image: block.image || "",
+        id: block.id || Date.now(),
+      }));
+    }
+
+    await blog.save();
+
+    res.status(200).json({ status: true, data: blog, message: "Blog updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: false, message: "Server error" });
+  }
+});
+
+
+export { createBlog, updateBlog,createCountry, getCountryWithBlogs, getCountries, getBlogBySlug, uploadEditorImage, getAllBlogs, getBlogById };
