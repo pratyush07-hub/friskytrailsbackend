@@ -16,6 +16,10 @@ const citySchema = new mongoose.Schema(
     image: {
       type: String,
     },
+    howToReach: {
+      type: String,
+      trim: true,
+    },
     country: { type: mongoose.Schema.Types.ObjectId, ref: "Country" },
     state: { type: mongoose.Schema.Types.ObjectId, ref: "State" },
   },

@@ -15,7 +15,12 @@ const productTypeSchema = new mongoose.Schema(
     },
     image: {
       type: String,
-    }
+    },
+    thingsToCarry: {
+      type: String, 
+      default: "",
+      trim: true,
+    },
   },
   { timestamps: true }
 );

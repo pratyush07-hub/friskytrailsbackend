@@ -14,7 +14,7 @@ const productSchema = new mongoose.Schema(
     city: { type: mongoose.Schema.Types.ObjectId, ref: "City" },
     productHighlights: { type: String },
     productOverview: { type: String },
-    thingsToCarry: { type: String },
+
     additionalInfo: { type: String },
     faq: { type: String },
     images: {

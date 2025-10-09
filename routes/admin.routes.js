@@ -3,10 +3,10 @@ import { verifyAdmin, verifyJWT } from "../middlewares/auth.middleware.js";
 import { createBlog, createCountry, getAllBlogs, getBlogById, getCountries, getCountryBySlug, getCountryWithBlogs, updateBlog, uploadEditorImage } from "../controllers/admin.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { createState, getStates, getStateWithBlogs } from "../controllers/state.controller.js";
-import { createCity, getCities, getCityWithBlogs } from "../controllers/city.controller.js";
+import { createCity, getCities, getCityById, getCityWithBlogs } from "../controllers/city.controller.js";
 import { createProduct, deleteProduct, getProductBySlug, getProducts, updateProduct } from "../controllers/product.controller.js";
 import { createBooking, getAllBookings, getBookingsByProduct } from "../controllers/booking.controller.js";
-import { createProductType, getAllProductTypes, getProductTypeBySlug, getProductTypeBySlugWithProduct } from "../controllers/productType.controller.js";
+import { createProductType, getAllProductTypes, getProductTypeById, getProductTypeBySlug, getProductTypeBySlugWithProduct } from "../controllers/productType.controller.js";
 
 const router = Router();
 
@@ -27,6 +27,7 @@ router.get("/country/:slug", verifyJWT, getCountryBySlug);
 router.get("/country/:slug/blogs", getCountryWithBlogs);
 router.get("/state/:slug/blogs", getStateWithBlogs);
 router.get("/city/:slug/blogs", getCityWithBlogs);
+router.get("/city/:id", verifyJWT, getCityById);
 
 router.post("/create-product", upload.array("images", 5), createProduct, verifyJWT, verifyAdmin);
 router.get("/products", getProducts);
@@ -41,6 +42,7 @@ router.get("/bookings/:slug", verifyJWT, verifyAdmin, getBookingsByProduct);
 router.post("/create-productType", upload.single("image"), verifyJWT, verifyAdmin, createProductType);
 router.get("/productTypes/:slug", getProductTypeBySlug);
 router.get("/productTypes/:slug/product", getProductTypeBySlugWithProduct);
+router.get("/productType/:id", verifyJWT, getProductTypeById);
 router.get("/all-productTypes", getAllProductTypes);
 
 

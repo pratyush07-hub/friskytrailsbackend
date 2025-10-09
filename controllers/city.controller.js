@@ -8,7 +8,7 @@ import { State } from "../models/state.model.js";
 import { CreateBlog } from "../models/create-blog.model.js";
 
 export const createCity = asyncHandler(async (req, res) => {
-  const { name, slug, country, state } = req.body;
+  const { name, slug, country, state, howToReach } = req.body;
 
   if (!name || !slug || !country || !state) {
     throw new ApiError(400, "Name, slug, country and state are required");
@@ -46,6 +46,7 @@ export const createCity = asyncHandler(async (req, res) => {
     country,
     state,
     image: imageUrl,
+    howToReach,
   });
 
   res
@@ -61,7 +62,7 @@ export const getCities = asyncHandler(async (req, res) => {
   }
 
   const cities = await City.find({ state: stateId }).select(
-    "name slug _id image state country createdAt"
+    "name slug _id image state country howToReach createdAt"
   );
 
   if (!cities.length) {
@@ -76,7 +77,9 @@ export const getCities = asyncHandler(async (req, res) => {
 export const getCityWithBlogs = asyncHandler(async (req, res) => {
   const { slug } = req.params;
 
-  const city = await City.findOne({ slug }).select("name slug image state country");
+  const city = await City.findOne({ slug }).select(
+    "name slug image state country howToReach"
+  );
   if (!city) {
     throw new ApiError(404, "City not found");
   }
@@ -88,5 +91,25 @@ export const getCityWithBlogs = asyncHandler(async (req, res) => {
 
   res
     .status(200)
-    .json(new ApiResponse(200, { city, blogs }, "City with blogs fetched successfully"));
+    .json(
+      new ApiResponse(200, { city, blogs }, "City with blogs fetched successfully")
+    );
+});
+
+export const getCityById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    throw new ApiError(400, "City ID is required");
+  }
+
+  const city = await City.findById(id).select(
+    "name slug image state country howToReach"
+  );
+
+  if (!city) {
+    throw new ApiError(404, "City not found");
+  }
+
+  res.status(200).json(new ApiResponse(200, city, "City fetched successfully"));
 });
