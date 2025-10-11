@@ -27,7 +27,7 @@ router.get("/country/:slug", verifyJWT, getCountryBySlug);
 router.get("/country/:slug/blogs", getCountryWithBlogs);
 router.get("/state/:slug/blogs", getStateWithBlogs);
 router.get("/city/:slug/blogs", getCityWithBlogs);
-router.get("/city/:id", verifyJWT, getCityById);
+router.get("/city/:id", getCityById);
 
 router.post("/create-product", upload.array("images", 5), createProduct, verifyJWT, verifyAdmin);
 router.get("/products", getProducts);
@@ -42,7 +42,7 @@ router.get("/bookings/:slug", verifyJWT, verifyAdmin, getBookingsByProduct);
 router.post("/create-productType", upload.single("image"), verifyJWT, verifyAdmin, createProductType);
 router.get("/productTypes/:slug", getProductTypeBySlug);
 router.get("/productTypes/:slug/product", getProductTypeBySlugWithProduct);
-router.get("/productType/:id", verifyJWT, getProductTypeById);
+router.get("/productType/:id", getProductTypeById);
 router.get("/all-productTypes", getAllProductTypes);
 
 
