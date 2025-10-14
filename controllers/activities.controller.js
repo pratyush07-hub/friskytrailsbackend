@@ -22,7 +22,7 @@ const activity = asyncHandler(async (req, res) => {
         date,
         description
     });
-
+// ensure the activity is saved to the database
     await activity.save();
     return res.status(201).json(new ApiResponse(201, activity, "Activity created successfully"));
 });
