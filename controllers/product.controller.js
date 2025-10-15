@@ -38,13 +38,14 @@ export const createProduct = asyncHandler(async (req, res) => {
   if (req.files && req.files.length > 0) {
     for (const file of req.files) {
       const result = await uploadOnCloudinary(file.path);
-      if (result && result.secure_url) {
-        images.push(result.secure_url);
-      }
+      if (result?.secure_url) images.push(result.secure_url);
     }
     if (images.length > 5)
       throw new ApiError(400, "You can upload up to 5 images only");
   }
+
+  // Helper: clean optional ObjectId fields
+  const cleanObjectId = (value) => (value ? value : undefined);
 
   const product = await Product.create({
     name,
@@ -61,9 +62,9 @@ export const createProduct = asyncHandler(async (req, res) => {
     additionalInfo,
     faq,
     images, // Cloudinary URLs
-    country,
-    state,
-    city,
+    country, // required
+    state: cleanObjectId(state), // optional
+    city: cleanObjectId(city),   // optional
   });
 
   res
@@ -92,24 +93,85 @@ export const getProductBySlug = asyncHandler(async (req, res) => {
 
   res.status(200).json(new ApiResponse(200, product, "Product fetched successfully"));
 });
+// ✅ Get Product By ID
+export const getProductById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  console.log("Fetching product with ID:", id);
+  const product = await Product.findById(id)
+    .populate("country state city", "name slug")
+    .select("-__v");
+  console.log("Fetched product:", product);
 
-// ✅ Update Product
-export const updateProduct = asyncHandler(async (req, res) => {
-  const { slug } = req.params;
-  const updateData = { ...req.body };
-
-  // Slug
-  if (updateData.name) updateData.slug = slugify(updateData.name, { lower: true, strict: true });
-  if (req.files?.length) {
-    updateData.images = req.files.map(f => f.path);
-    if (updateData.images.length > 5) throw new ApiError(400, "You can upload up to 5 images only");
-  }
-
-  const product = await Product.findOneAndUpdate({ slug }, updateData, { new: true, runValidators: true });
   if (!product) throw new ApiError(404, "Product not found");
 
-  res.status(200).json(new ApiResponse(200, product, "Product updated successfully"));
+  res.status(200).json(new ApiResponse(200, product, "Product fetched successfully"));
 });
+
+
+// Update product by slug
+export const updateProduct = asyncHandler(async (req, res) => {
+  const { slug } = req.params;
+  const {
+    name,
+    offerPrice,
+    actualPrice,
+    productType,
+    rating,
+    reviews,
+    productHighlights,
+    productOverview,
+    additionalInfo,
+    faq,
+    country,
+    state,
+    city,
+  } = req.body;
+
+  // Find existing product
+  const product = await Product.findOne({ slug });
+  if (!product) throw new ApiError(404, "Product not found");
+
+  // Update cover images if new files uploaded
+  if (req.files?.length) {
+    if (req.files.length + product.images.length > 5)
+      throw new ApiError(400, "You can upload up to 5 images only");
+
+    // Upload new images to cloudinary
+    const uploadedImages = [];
+    for (const file of req.files) {
+      const result = await uploadOnCloudinary(file.path);
+      if (result?.secure_url) uploadedImages.push(result.secure_url);
+    }
+
+    product.images = [...product.images, ...uploadedImages];
+  }
+
+  // Update fields
+  if (name) {
+    product.name = name;
+    product.slug = slugify(name, { lower: true, strict: true });
+  }
+  if (offerPrice) product.offerPrice = offerPrice;
+  if (actualPrice) product.actualPrice = actualPrice;
+  if (productType) product.productType = productType;
+  if (rating) product.rating = rating;
+  if (reviews) product.reviews = reviews;
+  if (productHighlights) product.productHighlights = productHighlights;
+  if (productOverview) product.productOverview = productOverview;
+  if (additionalInfo) product.additionalInfo = additionalInfo;
+  if (faq) product.faq = faq;
+  if (country) product.country = country;
+  if (state) product.state = state;
+  if (city) product.city = city;
+
+  // Save
+  await product.save();
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, product, "Product updated successfully"));
+});
+
 
 // ✅ Delete Product
 export const deleteProduct = asyncHandler(async (req, res) => {

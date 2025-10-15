@@ -47,17 +47,20 @@ const createBlogSchema = new mongoose.Schema(
     state: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "State",
-      required: true,
+      required: false,
     },
     city: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "City",
-      required: true,
+      required: false,
     },
     coverImage: {
       type: String,
     },
     conclusion: {
+      type: String,
+    },
+    faq: {
       type: String,
     },
     blocks: {

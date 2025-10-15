@@ -4,7 +4,7 @@ import { createBlog, createCountry, getAllBlogs, getBlogById, getCountries, getC
 import { upload } from "../middlewares/multer.middleware.js";
 import { createState, getStates, getStateWithBlogs } from "../controllers/state.controller.js";
 import { createCity, getCities, getCityById, getCityWithBlogs } from "../controllers/city.controller.js";
-import { createProduct, deleteProduct, getProductBySlug, getProducts, updateProduct } from "../controllers/product.controller.js";
+import { createProduct, deleteProduct, getProductById, getProductBySlug, getProducts, updateProduct } from "../controllers/product.controller.js";
 import { createBooking, getAllBookings, getBookingsByProduct } from "../controllers/booking.controller.js";
 import { createProductType, getAllProductTypes, getProductTypeById, getProductTypeBySlug, getProductTypeBySlugWithProduct } from "../controllers/productType.controller.js";
 
@@ -32,6 +32,7 @@ router.get("/city/:id", getCityById);
 router.post("/create-product", upload.array("images", 5), createProduct, verifyJWT, verifyAdmin);
 router.get("/products", getProducts);
 router.get("/product/:slug", getProductBySlug);
+router.get("/product/:id", getProductById);
 router.put("/product/:slug", upload.array("images", 5), updateProduct, verifyJWT, verifyAdmin);
 router.delete("/product/:slug", deleteProduct);
 

@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 import { v2 as cloudinary } from "cloudinary";
 import dotenv from "dotenv";
 dotenv.config();
@@ -10,9 +11,11 @@ cloudinary.config({
 });
 
 export const uploadOnCloudinary = async (localFilePath) => {
-  try {
-    if (!localFilePath) return null;
+  if (!localFilePath) return null;
 
+  const absolutePath = path.resolve(localFilePath);
+
+  try {
     // Upload to Cloudinary
     const response = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "auto",
@@ -20,18 +23,18 @@ export const uploadOnCloudinary = async (localFilePath) => {
 
     console.log("File uploaded to Cloudinary:", response.secure_url);
 
-    // Delete the file safely only if it exists
-    if (fs.existsSync(localFilePath)) {
-      fs.unlinkSync(localFilePath);
+    // Delete local file safely
+    if (fs.existsSync(absolutePath)) {
+      fs.unlinkSync(absolutePath); // sync delete
     }
 
     return response;
   } catch (error) {
     console.error("Cloudinary upload failed:", error);
 
-    // Clean up file on error too
-    if (fs.existsSync(localFilePath)) {
-      fs.unlinkSync(localFilePath);
+    // Clean up local file on error too
+    if (fs.existsSync(absolutePath)) {
+      fs.unlinkSync(absolutePath);
     }
 
     return null;

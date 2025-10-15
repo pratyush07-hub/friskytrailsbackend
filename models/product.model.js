@@ -9,9 +9,9 @@ const productSchema = new mongoose.Schema(
     reviews: { type: Number, default: 0, min: 0 },
     offerPrice: { type: Number, required: true },
     actualPrice: { type: Number, required: true },
-    country: { type: mongoose.Schema.Types.ObjectId, ref: "Country" },
-    state: { type: mongoose.Schema.Types.ObjectId, ref: "State" },
-    city: { type: mongoose.Schema.Types.ObjectId, ref: "City" },
+    country: { type: mongoose.Schema.Types.ObjectId, ref: "Country", required: true },
+    state: { type: mongoose.Schema.Types.ObjectId, ref: "State", required: false },
+    city: { type: mongoose.Schema.Types.ObjectId, ref: "City", required: false },
     productHighlights: { type: String },
     productOverview: { type: String },
 

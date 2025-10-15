@@ -7,10 +7,30 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const createBlog = asyncHandler(async (req, res) => {
   try {
-    const { title, slug, authorName, country, state, city, blocks, intro, conclusion } = req.body;
+    const {
+      title,
+      slug,
+      authorName,
+      country,
+      state,
+      city,
+      blocks,
+      intro,
+      conclusion,
+      faq,
+    } = req.body;
 
     // Validate required fields
-    if (!title || !slug || !authorName || !country || !state || !city || !blocks || !intro || !conclusion) {
+    if (
+      !title ||
+      !slug ||
+      !authorName ||
+      !country ||
+      !blocks ||
+      !intro ||
+      !conclusion ||
+      !faq
+    ) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -25,7 +45,9 @@ const createBlog = asyncHandler(async (req, res) => {
     }
 
     if (!Array.isArray(parsedBlocks) || parsedBlocks.length === 0) {
-      return res.status(400).json({ message: "At least one content block is required" });
+      return res
+        .status(400)
+        .json({ message: "At least one content block is required" });
     }
 
     // Handle optional cover image upload
@@ -43,6 +65,7 @@ const createBlog = asyncHandler(async (req, res) => {
       image: block.image || "",
     }));
 
+    const cleanObjectId = (value) => (value ? value : undefined);
     // Create blog
     const newBlog = await CreateBlog.create({
       title,
@@ -51,8 +74,9 @@ const createBlog = asyncHandler(async (req, res) => {
       conclusion,
       authorName,
       country,
-      state,
-      city,
+      state: cleanObjectId(state),
+      city: cleanObjectId(city),
+      faq,
       coverImage: coverImageUrl,
       blocks: updatedBlocks,
     });
@@ -73,7 +97,9 @@ const getAllBlogs = asyncHandler(async (req, res) => {
     // Fetch all blogs (latest first)
     const blogs = await CreateBlog.find()
       .sort({ createdAt: -1 })
-      .select("title slug authorName coverImage country state city intro createdAt") // select only needed fields
+      .select(
+        "title slug authorName coverImage country state city intro createdAt"
+      ) // select only needed fields
       .lean();
 
     // Handle empty case
@@ -98,9 +124,6 @@ const getAllBlogs = asyncHandler(async (req, res) => {
     });
   }
 });
-
-
-
 
 const createCountry = asyncHandler(async (req, res) => {
   try {
@@ -157,7 +180,9 @@ export const getCountryBySlug = asyncHandler(async (req, res) => {
       throw new ApiError(400, "Slug is required");
     }
 
-    const country = await Country.findOne({ slug }).select("name slug image createdAt");
+    const country = await Country.findOne({ slug }).select(
+      "name slug image createdAt"
+    );
 
     if (!country) {
       throw new ApiError(404, "Country not found");
@@ -187,14 +212,22 @@ const getCountryWithBlogs = asyncHandler(async (req, res) => {
 
   res
     .status(200)
-    .json(new ApiResponse(200, { country, blogs }, "Country with blogs fetched successfully"));
+    .json(
+      new ApiResponse(
+        200,
+        { country, blogs },
+        "Country with blogs fetched successfully"
+      )
+    );
 });
-
 
 const getBlogBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
-    if (!slug) return res.status(400).json({ status: false, message: "Slug parameter is required" });
+    if (!slug)
+      return res
+        .status(400)
+        .json({ status: false, message: "Slug parameter is required" });
 
     const blog = await CreateBlog.findOne({ slug })
       .populate("country", "name slug")
@@ -202,16 +235,21 @@ const getBlogBySlug = async (req, res) => {
       .populate("city", "name slug")
       .lean();
 
-    if (!blog) return res.status(404).json({ status: false, message: "Blog not found" });
+    if (!blog)
+      return res.status(404).json({ status: false, message: "Blog not found" });
 
     if (blog.blocks && blog.blocks.length > 0) {
       blog.blocks.sort((a, b) => a.order - b.order);
     }
 
-    res.status(200).json({ status: true, data: blog, message: "Blog fetched successfully" });
+    res
+      .status(200)
+      .json({ status: true, data: blog, message: "Blog fetched successfully" });
   } catch (error) {
     console.error("Error fetching blog:", error);
-    res.status(500).json({ status: false, message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ status: false, message: "Server error", error: error.message });
   }
 };
 const getBlogById = asyncHandler(async (req, res) => {
@@ -238,6 +276,7 @@ const getBlogById = asyncHandler(async (req, res) => {
       country: blog.country?.name || "",
       state: blog.state?.name || "",
       city: blog.city?.name || "",
+      faq: blog.faq || "",
       coverImage: blog.coverImage,
       blocks: blog.blocks.map((block) => ({
         id: block._id || block.id,
@@ -255,16 +294,19 @@ const getBlogById = asyncHandler(async (req, res) => {
   }
 });
 
-
 // Upload single image from rich text editor
 const uploadEditorImage = asyncHandler(async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ status: false, message: "No file uploaded" });
+      return res
+        .status(400)
+        .json({ status: false, message: "No file uploaded" });
     }
     const uploadResult = await uploadOnCloudinary(req.file.path);
     if (!uploadResult?.secure_url) {
-      return res.status(500).json({ status: false, message: "Image upload failed" });
+      return res
+        .status(500)
+        .json({ status: false, message: "Image upload failed" });
     }
     return res.status(201).json({ status: true, url: uploadResult.secure_url });
   } catch (error) {
@@ -285,11 +327,13 @@ const updateBlog = asyncHandler(async (req, res) => {
       country,
       state,
       city,
+      faq,
       blocks,
     } = req.body;
 
     const blog = await CreateBlog.findById(id);
-    if (!blog) return res.status(404).json({ status: false, message: "Blog not found" });
+    if (!blog)
+      return res.status(404).json({ status: false, message: "Blog not found" });
 
     // Update cover image if new file
     if (req.file) {
@@ -305,6 +349,7 @@ const updateBlog = asyncHandler(async (req, res) => {
     blog.authorName = authorName || blog.authorName;
     blog.country = country || blog.country;
     blog.state = state || blog.state;
+    blog.faq = faq || blog.faq;
     blog.city = city || blog.city;
 
     // Update blocks
@@ -323,12 +368,23 @@ const updateBlog = asyncHandler(async (req, res) => {
 
     await blog.save();
 
-    res.status(200).json({ status: true, data: blog, message: "Blog updated successfully" });
+    res
+      .status(200)
+      .json({ status: true, data: blog, message: "Blog updated successfully" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ status: false, message: "Server error" });
   }
 });
 
-
-export { createBlog, updateBlog,createCountry, getCountryWithBlogs, getCountries, getBlogBySlug, uploadEditorImage, getAllBlogs, getBlogById };
+export {
+  createBlog,
+  updateBlog,
+  createCountry,
+  getCountryWithBlogs,
+  getCountries,
+  getBlogBySlug,
+  uploadEditorImage,
+  getAllBlogs,
+  getBlogById,
+};
