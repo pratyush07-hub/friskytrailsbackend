@@ -53,7 +53,7 @@ const createBlog = asyncHandler(async (req, res) => {
     // Handle optional cover image upload
     let coverImageUrl = "";
     if (req.file) {
-      const uploadResult = await uploadOnCloudinary(req.file.path);
+      const uploadResult = await uploadOnCloudinary(req.file.buffer);
       coverImageUrl = uploadResult?.secure_url || "";
     }
 
@@ -136,7 +136,7 @@ const createCountry = asyncHandler(async (req, res) => {
     let imageUrl = "";
 
     if (req.file) {
-      const localPath = req.file.path;
+      const localPath = req.file.buffer;
       const uploadResult = await uploadOnCloudinary(localPath);
       if (!uploadResult) {
         return res.status(500).json({ message: "Image upload failed" });
@@ -302,7 +302,7 @@ const uploadEditorImage = asyncHandler(async (req, res) => {
         .status(400)
         .json({ status: false, message: "No file uploaded" });
     }
-    const uploadResult = await uploadOnCloudinary(req.file.path);
+    const uploadResult = await uploadOnCloudinary(req.file.buffer);
     if (!uploadResult?.secure_url) {
       return res
         .status(500)
@@ -337,7 +337,7 @@ const updateBlog = asyncHandler(async (req, res) => {
 
     // Update cover image if new file
     if (req.file) {
-      const uploadResult = await uploadOnCloudinary(req.file.path);
+      const uploadResult = await uploadOnCloudinary(req.file.buffer);
       blog.coverImage = uploadResult?.secure_url || blog.coverImage;
     }
 

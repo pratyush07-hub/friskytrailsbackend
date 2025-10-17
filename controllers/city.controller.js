@@ -26,7 +26,7 @@ export const createCity = asyncHandler(async (req, res) => {
 
   let imageUrl = "";
   if (req.file) {
-    const localPath = req.file.path;
+    const localPath = req.file.buffer;
     const uploadResult = await uploadOnCloudinary(localPath);
     if (!uploadResult) {
       throw new ApiError(500, "Image upload failed");

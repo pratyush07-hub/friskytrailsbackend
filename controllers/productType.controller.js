@@ -14,7 +14,7 @@ const createProductType = asyncHandler(async (req, res) => {
 
     let imageUrl = "";
     if (req.file) {
-      const localPath = req.file.path;
+      const localPath = req.file.buffer;
       const uploadResult = await uploadOnCloudinary(localPath);
       if (!uploadResult) {
         return res.status(500).json({ message: "Image upload failed" });

@@ -37,7 +37,7 @@ export const createProduct = asyncHandler(async (req, res) => {
   let images = [];
   if (req.files && req.files.length > 0) {
     for (const file of req.files) {
-      const result = await uploadOnCloudinary(file.path);
+      const result = await uploadOnCloudinary(file.buffer);
       if (result?.secure_url) images.push(result.secure_url);
     }
     if (images.length > 5)
