@@ -12,8 +12,8 @@ dotenv.config({
 const allowedOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
-  process.env.CORS_ORIGIN,
   "https://frisky-trails.vercel.app",
+  // process.env.CORS_ORIGIN,
 ];
 
 app.use((req, res, next) => {
