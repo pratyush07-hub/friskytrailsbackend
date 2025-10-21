@@ -231,10 +231,8 @@ const getBlogBySlug = async (req, res) => {
         .json({ status: false, message: "Slug parameter is required" });
 
     const blog = await CreateBlog.findOne({ slug })
-      .populate("country", "name slug")
-      .populate("state", "name slug")
-      .populate("city", "name slug")
-      .lean();
+      .populate("country state city", "name _id slug")
+  .select("-__v")
 
     if (!blog)
       return res.status(404).json({ status: false, message: "Blog not found" });
@@ -256,6 +254,8 @@ const getBlogBySlug = async (req, res) => {
 const getBlogById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
+  console.log("Fetching blog with ID:", id);
+
 
     const blog = await CreateBlog.findById(id)
       .populate("country", "name")

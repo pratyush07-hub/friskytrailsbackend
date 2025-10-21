@@ -4,6 +4,9 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import slugify from "slugify";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import mongoose from "mongoose";
+
+console.log("Controller loaded");
 
 // Create Product
 export const createProduct = asyncHandler(async (req, res) => {
@@ -73,7 +76,7 @@ export const createProduct = asyncHandler(async (req, res) => {
 });
 
 
-// ✅ Get All Products
+// Get All Products
 export const getProducts = asyncHandler(async (req, res) => {
   const products = await Product.find()
     .populate("country state city", "name slug")
@@ -82,31 +85,48 @@ export const getProducts = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, products, "Products fetched successfully"));
 });
 
-// ✅ Get Product By Slug
+// Get Product By Slug
 export const getProductBySlug = asyncHandler(async (req, res) => {
   const { slug } = req.params;
+
   const product = await Product.findOne({ slug })
-    .populate("country state city", "name slug")
-    .select("-__v");
-
+  .populate("country state city productType", "name slug")
+  .select("-__v");
   if (!product) throw new ApiError(404, "Product not found");
 
   res.status(200).json(new ApiResponse(200, product, "Product fetched successfully"));
 });
-// ✅ Get Product By ID
+
+
 export const getProductById = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  console.log("Fetching product with ID:", id);
-  const product = await Product.findById(id)
-    .populate("country state city", "name slug")
-    .select("-__v");
-  console.log("Fetched product:", product);
+  try {
+    console.log(req.params);
+    const { id } = req.params;
+    console.log("Fetching product with ID:", id);
 
-  if (!product) throw new ApiError(404, "Product not found");
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid product ID" });
+    }
 
-  res.status(200).json(new ApiResponse(200, product, "Product fetched successfully"));
+    const product = await Product.findById(id)
+      .populate("country", "name slug")
+      .populate("state", "name slug")
+      .populate("city", "name slug")
+      .populate("productType", "name slug")
+      .select("-__v")
+      .lean();
+
+    if (!product) {
+      console.error(`Product with ID ${id} not found`);
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
+    res.status(200).json({ success: true, data: product, message: "Product fetched successfully" });
+  } catch (err) {
+    console.error("Error fetching product:", err);
+    res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+  }
 });
-
 
 // Update product by slug
 export const updateProduct = asyncHandler(async (req, res) => {
@@ -173,7 +193,7 @@ export const updateProduct = asyncHandler(async (req, res) => {
 });
 
 
-// ✅ Delete Product
+// Delete Product
 export const deleteProduct = asyncHandler(async (req, res) => {
   const { slug } = req.params;
   const product = await Product.findOneAndDelete({ slug });

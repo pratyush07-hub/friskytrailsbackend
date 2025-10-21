@@ -31,8 +31,8 @@ router.get("/city/:id", getCityById);
 
 router.post("/create-product", upload.array("images", 5), createProduct, verifyJWT, verifyAdmin);
 router.get("/products", getProducts);
-router.get("/product/:slug", getProductBySlug);
-router.get("/product/:id", getProductById);
+router.route("/product/id/:id").get(verifyJWT, verifyAdmin, getProductById);
+router.get("/product/slug/:slug", getProductBySlug);
 router.put("/product/:slug", upload.array("images", 5), updateProduct, verifyJWT, verifyAdmin);
 router.delete("/product/:slug", deleteProduct);
 

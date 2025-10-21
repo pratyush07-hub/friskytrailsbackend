@@ -47,13 +47,14 @@ const userSchema = new mongoose.Schema(
 
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
-
-  this.password = await bcrypt.hash(this.password, 10);
+  const pepper = process.env.PASSWORD_PEPPER || "";
+  this.password = await bcrypt.hash(this.password + pepper, 10);
   next();
 });
 
 userSchema.methods.isPasswordCorrect = async function (password) {
-  const isMatch =  await bcrypt.compare(password, this.password);
+  const pepper = process.env.PASSWORD_PEPPER || "";
+  const isMatch =  await bcrypt.compare(password + pepper, this.password);
   return isMatch;
 };
 userSchema.methods.generateAccessToken = function () {
