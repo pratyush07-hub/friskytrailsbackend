@@ -96,11 +96,12 @@ const getAllBlogs = asyncHandler(async (req, res) => {
   try {
     // Fetch all blogs (latest first)
     const blogs = await CreateBlog.find()
-      .sort({ createdAt: -1 })
-      .select(
-        "title slug authorName coverImage country state city intro createdAt"
-      ) // select only needed fields
-      .lean();
+  .populate("country", "name _id")
+  .populate("state", "name _id")
+  .populate("city", "name _id")
+  .sort({ createdAt: -1 })
+  .select("title slug authorName coverImage country state city intro createdAt")
+  .lean();
 
     // Handle empty case
     if (!blogs || blogs.length === 0) {
