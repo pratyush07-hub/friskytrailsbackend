@@ -1,53 +1,53 @@
-// user hai ya nahi bas yeh verify karega
-import { asyncHandler } from "../utils/asyncHandler.js";
-import jwt from "jsonwebtoken";
-import { User } from "../models/user.model.js";
-import { ApiError } from "../utils/apiError.js";
-import { ApiResponse } from "../utils/apiResponse.js";
+import jwt from 'jsonwebtoken';
+import User from '../models/user.model.js';
 
-export const verifyJWT = asyncHandler(async (req, res, next) => {
+const JWT_SECRET = process.env.ACCESS_TOKEN_SECRET|| 'your-super-secret-jwt-key';
+
+/**
+ * @desc    Protect routes - verify JWT token from cookie
+ * @usage   Add to any route that requires authentication
+ */
+export const protect = async (req, res, next) => {
   try {
-    const token =
-      req.cookies?.accessToken ||
-      req.header("Authorization")?.replace("Bearer ", "");
+    let token;
 
-      const options = {
-    httpOnly: true,
-    secure: true,
-    sameSite: "Lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  };
-    if (!token) {
-      return res
-      .status(200)
-      .clearCookie("accessToken", options)
-      .clearCookie("refreshToken", options)
-      .json(new ApiResponse(200, {}, "User logged out"));
+    // Check for token in cookies (primary method)
+    if (req.cookies && req.cookies.token) {
+      token = req.cookies.token;
     }
-    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    const user = await User.findById(decodedToken?.id).select(
-      "-password -refreshToken"
-    );
+    // Fallback: Check Authorization header
+    else if (req.headers.authorization?.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
 
+    if (!token || token === 'none') {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized to access this route',
+      });
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    // Attach user to request
+    const user = await User.findById(decoded.id);
+    
     if (!user) {
-      throw new ApiError(401, "Invalid Access Token");
+      return res.status(401).json({
+        success: false,
+        message: 'User no longer exists',
+      });
     }
 
     req.user = user;
     next();
   } catch (error) {
-    if (error.name === "TokenExpiredError") {
-      throw new ApiError(401, "Access token has expired");
-    }
-    throw new ApiError(401, error?.message || "Invalid Access Token");
-  }
-});
-
-
-export const verifyAdmin = (req, res, next) => {
-  if (req.user && req.user.admin === true) {
-    next();
-  } else {
-    throw new ApiError(403, "Admin access only");
+    console.error('Auth middleware error:', error);
+    return res.status(401).json({
+      success: false,
+      message: 'Not authorized to access this route',
+    });
   }
 };
+

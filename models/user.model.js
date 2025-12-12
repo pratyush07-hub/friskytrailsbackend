@@ -1,82 +1,77 @@
 import mongoose from "mongoose";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
-    userName: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
-      index: true,
-    },
-    firstName: {
-      type: String,
-      required: true,
-      trim: true,
-      index: true,
-    },
-    lastName: {
-      type: String,
-      required: true,
-      trim: true,
-      index: true,
-    },
     email: {
       type: String,
-      required: true,
+      required: [true, "Email is required"],
       unique: true,
       lowercase: true,
       trim: true,
-    },
-    admin: {
-      type: Boolean, default: false,
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
+      required: function () {
+        return !this.googleId;
+      },
+      minlength: 6,
+      select: false,
     },
-    refreshToken: {
+    userName: { type: String, unique: true, sparse: true, default: undefined },
+    name: {
+      type: String,
+      trim: true,
+    },
+    avatar: {
       type: String,
     },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    isAdmin: {
+      type: Boolean,
+      default: false,
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
+// Hash password before saving
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  const pepper = process.env.PASSWORD_PEPPER || "";
-  this.password = await bcrypt.hash(this.password + pepper, 10);
-  next();
+  if (!this.isModified("password") || !this.password) return next();
+
+  try {
+    const salt = await bcrypt.genSalt(12);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
 
-userSchema.methods.isPasswordCorrect = async function (password) {
-  const pepper = process.env.PASSWORD_PEPPER || "";
-  const isMatch =  await bcrypt.compare(password + pepper, this.password);
-  return isMatch;
-};
-userSchema.methods.generateAccessToken = function () {
-  return jwt.sign(
-    { id: this._id, userName: this.userName, email: this.email },
-    process.env.ACCESS_TOKEN_SECRET,
-    {
-      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
-    }
-  );
-};
-userSchema.methods.generateRefreshToken = function () {
-  return jwt.sign(
-    {
-      _id: this._id,
-    },
-
-    process.env.REFRESH_TOKEN_SECRET,
-    {
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
-    }
-  );
+// Compare password method
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  if (!this.password) return false;
+  return bcrypt.compare(candidatePassword, this.password);
 };
 
-export const User = mongoose.model("User", userSchema);
+// Transform user object for JSON response
+userSchema.methods.toJSON = function () {
+  const obj = this.toObject();
+  delete obj.password;
+  delete obj.__v;
+  return obj;
+};
+
+const User = mongoose.model("User", userSchema);
+
+export default User;

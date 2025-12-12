@@ -4,9 +4,17 @@ const asyncHandler = (fn) => async (req, res, next) => {
     }
     catch (error) {
         console.error("Caught Error:", error);
-        res.status(error.code || 500).json({
+        
+        // Handle ApiError instances properly
+        const statusCode = error.statusCode || error.code || 500;
+        const message = error.message || "Something went wrong";
+        const errors = error.errors || [];
+        
+        res.status(statusCode).json({
             success: false,
-            message: error.message
+            message: message,
+            errors: errors,
+            ...(error.data && { data: error.data })
         })
     }
 }

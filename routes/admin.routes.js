@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { verifyAdmin, verifyJWT } from "../middlewares/auth.middleware.js";
+import { verifyAdmin } from "../middlewares/verifyAdmin.js";
 import { createBlog, createCountry, getAllBlogs, getBlogById, getCountries, getCountryBySlug, getCountryWithBlogs, updateBlog, uploadEditorImage } from "../controllers/admin.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { createState, getStates, getStateWithBlogs } from "../controllers/state.controller.js";
@@ -7,7 +7,7 @@ import { createCity, getCities, getCityById, getCityWithBlogs } from "../control
 import { createProduct, deleteProduct, getProductById, getProductBySlug, getProducts, updateProduct } from "../controllers/product.controller.js";
 import { createBooking, getAllBookings, getBookingsByProduct } from "../controllers/booking.controller.js";
 import { createProductType, getAllProductTypes, getProductTypeById, getProductTypeBySlug, getProductTypeBySlugWithProduct } from "../controllers/productType.controller.js";
-
+import { verifyJWT } from "../middlewares/verifyJWT.js";
 const router = Router();
 
 router.route("/create-blog").post(upload.single("image"), verifyJWT, verifyAdmin, createBlog)
