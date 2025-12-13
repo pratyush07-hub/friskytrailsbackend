@@ -16,7 +16,7 @@ const activity = asyncHandler(async (req, res) => {
     }
 
     const activity = new Activity({
-        user: req.user._id,
+        user: req.user?._id,
         activityType,
         location,
         date,

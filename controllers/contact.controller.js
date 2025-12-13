@@ -5,6 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 const contactclient = asyncHandler(async (req, res) => {
     const {name, mobile, email, message} = req.body;
+    // console.log(req.body)
     if(
         [name, email, message].some((field) =>
         field?.trim() === "")

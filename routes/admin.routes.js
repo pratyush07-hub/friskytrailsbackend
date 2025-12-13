@@ -9,15 +9,23 @@ import { createBooking, getAllBookings, getBookingsByProduct } from "../controll
 import { createProductType, getAllProductTypes, getProductTypeById, getProductTypeBySlug, getProductTypeBySlugWithProduct } from "../controllers/productType.controller.js";
 import { verifyJWT } from "../middlewares/verifyJWT.js";
 const router = Router();
+console.log("🔥 LOADED:", import.meta.url);
+
+
+console.log("🔥 ROUTER FILE EXECUTED");
 
 router.route("/create-blog").post(upload.single("image"), verifyJWT, verifyAdmin, createBlog)
-router.route("/blogs").get(verifyJWT, verifyAdmin, getAllBlogs);
+console.log("Router file loaded");
+router.get("/blogs", (req, res, next) => {
+  console.log("Route matched, going to next");
+  next();
+}, getAllBlogs);
 router.route("/blog/:id").get(verifyJWT, verifyAdmin, getBlogById);
 router.put("/blog/:id", upload.single("image"), verifyJWT, verifyAdmin, updateBlog);
 
 router.post("/upload-editor-image", upload.single("image"), verifyJWT, verifyAdmin, uploadEditorImage);
 router.post("/create-country", upload.single("image"), verifyJWT, verifyAdmin, createCountry);
-router.get("/country/:slug", verifyJWT, getCountries);
+// router.get("/country/:slug", verifyJWT, getCountries);
 router.post("/create-state", upload.single("image"), verifyJWT, verifyAdmin, createState);
 router.get("/countries", verifyJWT, getCountries);
 router.get("/states/:countryId", verifyJWT, getStates);
@@ -29,7 +37,13 @@ router.get("/state/:slug/blogs", getStateWithBlogs);
 router.get("/city/:slug/blogs", getCityWithBlogs);
 router.get("/city/:id", getCityById);
 
-router.post("/create-product", upload.array("images", 5), createProduct, verifyJWT, verifyAdmin);
+router.post(
+  "/create-product",
+  verifyJWT,
+  verifyAdmin,
+  upload.array("images", 5),
+  createProduct
+);
 router.get("/products", getProducts);
 router.route("/product/id/:id").get(verifyJWT, verifyAdmin, getProductById);
 router.get("/product/slug/:slug", getProductBySlug);

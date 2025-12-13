@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import crypto from "node:crypto";
 
 const busTicketSchema = new mongoose.Schema(
   {
@@ -31,7 +32,10 @@ const busTicketSchema = new mongoose.Schema(
     bookingReference: {
       type: String,
       unique: true,
-    }
+      required: true,
+      default: () =>
+        "FL-" + crypto.randomBytes(4).toString("hex").toUpperCase(),
+    },
   },
   { timestamps: true }
 );

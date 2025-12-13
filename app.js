@@ -82,9 +82,64 @@ app.use(passport.initialize());
 
 app.use("/api/v1/contact", contactRoutes);
 app.use("/api/v1/user", userRoutes);
+// Mount admin routes before the generic /api/v1 routes so admin-specific
+// 404 handlers don't intercept admin paths.
+// Debug wrapper to ensure admin routes are being mounted and invoked
+app.use("/api/v1/admin", (req, res, next) => {
+  console.log(`-- ADMIN ROUTES MOUNT HIT: ${req.method} ${req.originalUrl}`);
+  next();
+}, adminRoutes);
 app.use("/api/v1", adventureRoutes);
-app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/blog", blogRoutes);
+
+// Log router object for diagnostics at startup
+console.log("app._router at startup:", !!app._router, app._router ? Object.keys(app._router) : null);
+
+// Temporary debug route to inspect registered routes (placed before 404)
+app.get("/__routes", (req, res) => {
+  try {
+    // Support Express 4 & 5 internals: try _router then router
+    const stack = (app._router && app._router.stack) || (app.router && app.router.stack) || [];
+    const routes = stack
+      .filter((layer) => layer.route || layer.name === "router" || layer.regexp)
+      .map((layer) => {
+        if (layer.route) {
+          return { type: "route", path: layer.route.path, methods: layer.route.methods };
+        }
+        return {
+          type: "router",
+          name: layer.name,
+          regexp: layer.regexp ? layer.regexp.toString() : null,
+          handleName: layer.handle && layer.handle.name,
+          handleStackLength: layer.handle && layer.handle.stack ? layer.handle.stack.length : null,
+          inner: (layer.handle && layer.handle.stack ? layer.handle.stack.map((l) => {
+            if (l.route) {
+              return { path: l.route.path, methods: l.route.methods };
+            }
+            return { name: l.name, regexp: l.regexp ? l.regexp.toString() : null };
+          }) : []),
+        };
+      });
+
+    // If no routes found, include some diagnostic info
+    if (routes.length === 0) {
+      return res.json({
+        success: true,
+        routes: [],
+        diagnostic: {
+          hasRouter: !!app._router,
+          routerKeys: app._router ? Object.keys(app._router) : [],
+          appKeys: Object.getOwnPropertyNames(app),
+          hasUse: typeof app.use === 'function'
+        },
+      });
+    }
+
+    res.json({ success: true, routes });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
 
 // 404 handler for undefined routes
 app.use((req, res) => {
@@ -108,8 +163,36 @@ app.use((err, req, res, next) => {
   console.error('Request Query:', req.query);
   console.error('--- END ERROR DETAILS ---\n');
   
-  const statusCode = err.statusCode || err.code || 500;
-  const message = err.message || 'Internal Server Error';
+  // Normalize status code: if a Mongoose error code is present (e.g. 11000)
+  // map it to an appropriate HTTP status. Only use err.code directly when
+  // it is in the valid HTTP range.
+  let statusCode = 500;
+  if (typeof err.statusCode === 'number' && err.statusCode >= 100 && err.statusCode < 1000) {
+    statusCode = err.statusCode;
+  } else if (typeof err.code === 'number' && err.code >= 100 && err.code < 1000) {
+    statusCode = err.code;
+  } else if (err.code === 11000 || err.name === 'MongoServerError') {
+    // Mongoose duplicate key or related errors should return 409 Conflict
+    statusCode = 409;
+  } else if (err.name === 'ValidationError') {
+    // Mongoose validation failure
+    statusCode = 400;
+  } else if (err.name === 'CastError') {
+    // Mongoose cast errors (e.g., invalid ObjectId)
+    statusCode = 400;
+  } else if (err.name === 'JsonWebTokenError' || err.name === 'UnauthorizedError') {
+    // JWT/token-related errors
+    statusCode = 401;
+  } else if (err.status && typeof err.status === 'number') {
+    statusCode = err.status;
+  }
+
+  // Pull a friendly message if available
+  let message = err.message || 'Internal Server Error';
+  if (err.code === 11000 && err.keyValue) {
+    const key = Object.keys(err.keyValue)[0];
+    message = `Duplicate value for ${key}`;
+  }
   
   res.status(statusCode).json({
     success: false,

@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
 
-const JWT_SECRET = process.env.ACCESS_TOKEN_SECRET|| 'your-super-secret-jwt-key';
+const JWT_SECRET = process.env.JWT_SECRET || process.env.ACCESS_TOKEN_SECRET || 'your-super-secret-jwt-key';
 
 /**
  * @desc    Protect routes - verify JWT token from cookie

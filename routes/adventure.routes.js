@@ -4,9 +4,10 @@ import { flight } from "../controllers/flight.controller.js";
 import { railTicket } from "../controllers/railTicket.controller.js";
 import { busTicket } from "../controllers/busTicket.controller.js";
 import { hotelBooking } from "../controllers/hotel.controller.js";
-import { transport } from "../controllers/transport.contoller.js";
+
 import { activity } from "../controllers/activities.controller.js";
 import { verifyJWT } from "../middlewares/verifyJWT.js";
+import { transport } from "../controllers/transport.contoller.js";
 
 const router = Router();
 
@@ -28,7 +29,8 @@ router.route("/rail/booking").post(...protectedRoute(railTicket));
 router.route("/bus/booking").post(...protectedRoute(busTicket));
 router.route("/hotel/booking").post(...protectedRoute(hotelBooking));
 router.route("/transport/booking").post(...protectedRoute(transport));
-router.route("/activity").post(...protectedRoute(activity));
+// Allow public submissions for activities (no auth required)
+router.route("/activity").post(asyncHandler(activity));
 
 // 404 handler for undefined routes under /api/v1
 router.use((req, res) => {

@@ -4,25 +4,32 @@ import { ApiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const hotelBooking = asyncHandler(async (req, res) => {
-    const { city, budget, checkInDate, checkOutDate, guests, price } = req.body;
+    const { city, property, checkInDate, checkOutDate, guests, price } = req.body;
+
     if (
-        [city, budget, checkInDate, checkOutDate, guests].some((field) =>
-            field === undefined || (typeof field === 'string' && field.trim() === "")
+        [city, property, checkInDate, checkOutDate, guests, price].some(
+            (field) => field === undefined || (typeof field === "string" && field.trim() === "")
         )
     ) {
         throw new ApiError(400, "Required fields are missing");
     }
+
     const hotelBooking = new HotelBooking({
         user: req.user._id,
         city,
-        budget,
+        property,
         checkInDate,
         checkOutDate,
         guests,
-        price
+        price,
     });
+
     await hotelBooking.save();
-    return res.status(201).json(new ApiResponse(201, hotelBooking, "Hotel booking created successfully"));
+
+    return res.status(201).json(
+        new ApiResponse(201, hotelBooking, "Hotel booking created successfully")
+    );
 });
+
 
 export { hotelBooking };

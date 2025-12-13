@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
 
 // Environment variables (set these in your .env file)
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
+const JWT_SECRET = process.env.JWT_SECRET || process.env.ACCESS_TOKEN_SECRET || 'your-super-secret-jwt-key';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 const COOKIE_EXPIRES_DAYS = 7;
 
@@ -28,18 +28,23 @@ const sendTokenResponse = (user, statusCode, res) => {
     sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
   };
 
-  res
-    .status(statusCode)
-    .cookie('token', token, cookieOptions)
-    .json({
-      success: true,
-      user: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        avatar: user.avatar,
-      },
-    });
+  const payload = {
+    success: true,
+    user: {
+      id: user._id,
+      email: user.email,
+      name: user.name,
+      avatar: user.avatar,
+    },
+  };
+
+  // For local development, expose token in the response so dev clients can
+  // use Authorization header when Secure cookies are not available (HTTP).
+  if (process.env.NODE_ENV !== 'production') {
+    payload.token = token;
+  }
+
+  res.status(statusCode).cookie('token', token, cookieOptions).json(payload);
 };
 
 /**
@@ -155,6 +160,7 @@ export const getMe = async (req, res) => {
         email: user.email,
         name: user.name,
         avatar: user.avatar,
+        admin: user.isAdmin,
       },
     });
   } catch (error) {

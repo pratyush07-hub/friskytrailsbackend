@@ -88,6 +88,7 @@ export const getProducts = asyncHandler(async (req, res) => {
 // Get Product By Slug
 export const getProductBySlug = asyncHandler(async (req, res) => {
   const { slug } = req.params;
+  console.log(slug)
 
   const product = await Product.findOne({ slug })
   .populate("country state city productType", "name slug")

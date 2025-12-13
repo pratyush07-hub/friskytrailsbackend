@@ -94,7 +94,7 @@ const createBlog = asyncHandler(async (req, res) => {
 
 const getAllBlogs = asyncHandler(async (req, res) => {
   try {
-    // Fetch all blogs (latest first)
+    console.log("hello")
     const blogs = await CreateBlog.find()
   .populate("country", "name _id")
   .populate("state", "name _id")
@@ -103,11 +103,14 @@ const getAllBlogs = asyncHandler(async (req, res) => {
   .select("title slug authorName coverImage country state city intro createdAt")
   .lean();
 
+  console.log("blogs", blogs)
     // Handle empty case
     if (!blogs || blogs.length === 0) {
-      return res.status(404).json({
-        status: false,
-        message: "No blogs found",
+      return res.status(200).json({  
+        status: true,
+        count: 0,
+        data: [],
+        message: "No blogs yet",
       });
     }
 

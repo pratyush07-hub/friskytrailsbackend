@@ -4,6 +4,7 @@ import { ApiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const railTicket = asyncHandler(async (req, res) => {
+    console.log(req.body)
     const { fromStation, toStation, departureDate, returnDate, travelClass, passengers, price } = req.body;
     if (
         [fromStation, toStation, departureDate, travelClass, passengers].some((field) =>
