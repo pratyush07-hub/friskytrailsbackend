@@ -24,9 +24,14 @@ const sendTokenResponse = (user, statusCode, res) => {
   const cookieOptions = {
     expires: new Date(Date.now() + COOKIE_EXPIRES_DAYS * 24 * 60 * 60 * 1000),
     httpOnly: true,
+    // Must be secure + sameSite='none' for cross-site cookies to be accepted by browsers
     secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
   };
+  // Allow optional cookie domain override for multi-domain deployments
+  if (process.env.COOKIE_DOMAIN) {
+    cookieOptions.domain = process.env.COOKIE_DOMAIN;
+  }
 
   const payload = {
     success: true,
@@ -178,12 +183,18 @@ export const getMe = async (req, res) => {
  * @access  Private
  */
 export const logout = (req, res) => {
-  res
-    .status(200)
-    .cookie('token', 'none', {
+    const clearCookieOptions = {
       expires: new Date(Date.now() + 10 * 1000), // Expires in 10 seconds
       httpOnly: true,
-    })
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    };
+    if (process.env.COOKIE_DOMAIN) {
+      clearCookieOptions.domain = process.env.COOKIE_DOMAIN;
+    }
+    res
+      .status(200)
+      .cookie('token', 'none', clearCookieOptions)
     .json({
       success: true,
       message: 'Logged out successfully',
@@ -210,8 +221,11 @@ export const googleCallback = async (req, res) => {
       expires: new Date(Date.now() + COOKIE_EXPIRES_DAYS * 24 * 60 * 60 * 1000),
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     };
+    if (process.env.COOKIE_DOMAIN) {
+      cookieOptions.domain = process.env.COOKIE_DOMAIN;
+    }
 
     res
       .cookie('token', token, cookieOptions)
