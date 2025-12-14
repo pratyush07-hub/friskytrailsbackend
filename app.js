@@ -82,15 +82,10 @@ app.use(passport.initialize());
 
 app.use("/api/v1/contact", contactRoutes);
 app.use("/api/v1/user", userRoutes);
-// Mount admin routes before the generic /api/v1 routes so admin-specific
-// 404 handlers don't intercept admin paths.
-// Debug wrapper to ensure admin routes are being mounted and invoked
-app.use("/api/v1/admin", (req, res, next) => {
-  console.log(`-- ADMIN ROUTES MOUNT HIT: ${req.method} ${req.originalUrl}`);
-  next();
-}, adminRoutes);
-app.use("/api/v1", adventureRoutes);
+app.use("/api/v1/admin",adminRoutes);
 app.use("/api/v1/blog", blogRoutes);
+
+app.use("/api/v1", adventureRoutes);
 
 // Log router object for diagnostics at startup
 console.log("app._router at startup:", !!app._router, app._router ? Object.keys(app._router) : null);

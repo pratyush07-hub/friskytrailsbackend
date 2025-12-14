@@ -225,6 +225,20 @@ const getCountryWithBlogs = asyncHandler(async (req, res) => {
     );
 });
 
+export const getPublicBlogs = asyncHandler(async (req, res) => {
+  try {
+    const blogs = await CreateBlog.find()
+      .sort({ createdAt: -1 })
+      .select("title slug authorName coverImage country state city intro createdAt")
+      .lean();
+
+    return res.status(200).json({ status: true, count: blogs.length, data: blogs });
+  } catch (err) {
+    console.error("Error fetching public blogs:", err);
+    return res.status(500).json({ status: false, message: "Server error" });
+  }
+});
+
 const getBlogBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
