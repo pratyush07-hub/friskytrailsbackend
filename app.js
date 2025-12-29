@@ -4,6 +4,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 // import { app } from "./app.js";
+import { rateLimit } from 'express-rate-limit'
 
 import contactRoutes from "./routes/contact.routes.js";
 import userRoutes from "./routes/user.routes.js";
@@ -75,20 +76,35 @@ app.use((req, res, next) => {
 import passport from "passport";
 import configurePassport from "./config/passport.js";
 
+// rate-limiter 
+const limiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+	standardHeaders: 'draft-8', // draft-6: `RateLimit-*` headers; draft-7 & draft-8: combined `RateLimit` header
+	legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
+	ipv6Subnet: 56, // Set to 60 or 64 to be less aggressive, or 52 or 48 to be more aggressive
+	// store: ... , // Redis, Memcached, etc. See below.
+})
+
+// helmet 
+import helmet from "helmet";
+
+
 // Initialize Passport
 configurePassport();
 app.use(passport.initialize());
 
+app.use(limiter);
+app.use(helmet());
 
 app.use("/api/v1/contact", contactRoutes);
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/admin",adminRoutes);
 app.use("/api/v1/blog", blogRoutes);
-
 app.use("/api/v1", adventureRoutes);
 
 // Log router object for diagnostics at startup
-console.log("app._router at startup:", !!app._router, app._router ? Object.keys(app._router) : null);
+// console.log("app._router at startup:", !!app._router, app._router ? Object.keys(app._router) : null);
 
 // Temporary debug route to inspect registered routes (placed before 404)
 app.get("/__routes", (req, res) => {
