@@ -4,6 +4,9 @@ import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { State } from "../models/state.model.js";
+import { City } from "../models/city.model.js";
+import mongoose from "mongoose";
 
 const createBlog = asyncHandler(async (req, res) => {
   try {
@@ -395,7 +398,324 @@ const updateBlog = asyncHandler(async (req, res) => {
   }
 });
 
+
+// controllers/stateController.ts (ya .js)
+// path apne hisaab se change karein
+
+ const getAllStates = async (req, res) => {
+  try {
+    const states = await State.find({})
+      .populate("country") // agar country ka pura data chahiye
+      .sort({ createdAt: -1 }); // latest first, optional
+
+    return res.status(200).json({
+      success: true,
+      count: states.length,
+      data: states,
+    });
+  } catch (error) {
+    console.error("Error in getAllStates:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch states",
+    });
+  }
+};
+
+
+
+const getStateById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        status: false,
+        message: "State ID is required",
+      });
+    }
+
+    const state = await State.findById(id)
+      .populate("country", "_id name slug");
+
+    if (!state) {
+      return res.status(404).json({
+        status: false,
+        message: "State not found",
+      });
+    }
+
+    return res.status(200).json({
+      status: true,
+      data: state,
+    });
+  } catch (error) {
+    console.error("Get state by ID error:", error);
+
+    return res.status(500).json({
+      status: false,
+      message: "Failed to fetch state",
+    });
+  }
+};
+
+const getAllCountries = async (req, res) => {
+  try {
+    const countries = await Country.find()
+      .select("_id name slug image")
+      .sort({ name: 1 });
+
+    return res.status(200).json({
+      status: true,
+      data: countries,
+    });
+  } catch (error) {
+    console.error("getAllCountries error:", error);
+    return res.status(500).json({
+      status: false,
+      message: "Failed to fetch countries",
+    });
+  }
+};
+ const getCountryById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        status: false,
+        message: "Invalid country ID",
+      });
+    }
+
+    const country = await Country.findById(id);
+
+    if (!country) {
+      return res.status(404).json({
+        status: false,
+        message: "Country not found",
+      });
+    }
+
+    return res.status(200).json({
+      status: true,
+      data: country,
+    });
+  } catch (error) {
+    console.error("getCountryById error:", error);
+    return res.status(500).json({
+      status: false,
+      message: "Failed to fetch country",
+    });
+  }
+};
+
+
+const updateState = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        status: false,
+        message: "Invalid state ID",
+      });
+    }
+
+    const state = await State.findById(id);
+
+    if (!state) {
+      return res.status(404).json({
+        status: false,
+        message: "State not found",
+      });
+    }
+
+    // 🔹 text fields
+    state.name = req.body.name || state.name;
+    state.slug = req.body.slug || state.slug;
+    state.description = req.body.description || state.description;
+    state.country = req.body.country || state.country;
+
+    // 🔹 image (optional) - using Cloudinary
+    if (req.file) {
+      const uploadResult = await uploadOnCloudinary(req.file.buffer);
+      state.image = uploadResult?.secure_url || state.image;
+    }
+
+    await state.save();
+
+    return res.status(200).json({
+      status: true,
+      message: "State updated successfully",
+      data: state,
+    });
+  } catch (error) {
+    console.error("updateState error:", error);
+    return res.status(500).json({
+      status: false,
+      message: "Failed to update state",
+    });
+  }
+};
+
+const updateCountry = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        status: false,
+        message: "Invalid country ID",
+      });
+    }
+
+    const country = await Country.findById(id);
+
+    if (!country) {
+      return res.status(404).json({
+        status: false,
+        message: "Country not found",
+      });
+    }
+
+    // 🔹 text fields
+    country.name = req.body.name || country.name;
+    country.slug = req.body.slug || country.slug;
+
+    // 🔹 image (optional) - using Cloudinary
+    if (req.file) {
+      const uploadResult = await uploadOnCloudinary(req.file.buffer);
+      country.image = uploadResult?.secure_url || country.image;
+    }
+
+    await country.save();
+
+    return res.status(200).json({
+      status: true,
+      message: "Country updated successfully",
+      data: country,
+    });
+  } catch (error) {
+    console.error("updateCountry error:", error);
+    return res.status(500).json({
+      status: false,
+      message: "Failed to update country",
+    });
+  }
+};
+
+// ==================== CITIES CONTROLLERS ====================
+
+const getAllCities = async (req, res) => {
+  try {
+    const cities = await City.find({})
+      .populate("country", "_id name slug")
+      .populate("state", "_id name slug")
+      .sort({ createdAt: -1 }); // latest first, optional
+
+    return res.status(200).json({
+      success: true,
+      count: cities.length,
+      data: cities,
+    });
+  } catch (error) {
+    console.error("Error in getAllCities:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch cities",
+    });
+  }
+};
+
+const getCityById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        status: false,
+        message: "City ID is required",
+      });
+    }
+
+    const city = await City.findById(id)
+      .populate("country", "_id name slug")
+      .populate("state", "_id name slug");
+
+    if (!city) {
+      return res.status(404).json({
+        status: false,
+        message: "City not found",
+      });
+    }
+
+    return res.status(200).json({
+      status: true,
+      data: city,
+    });
+  } catch (error) {
+    console.error("Get city by ID error:", error);
+    return res.status(500).json({
+      status: false,
+      message: "Failed to fetch city",
+    });
+  }
+};
+
+const updateCity = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        status: false,
+        message: "Invalid city ID",
+      });
+    }
+
+    const city = await City.findById(id);
+
+    if (!city) {
+      return res.status(404).json({
+        status: false,
+        message: "City not found",
+      });
+    }
+
+    // 🔹 text fields
+    city.name = req.body.name || city.name;
+    city.slug = req.body.slug || city.slug;
+    city.howToReach = req.body.howToReach || city.howToReach;
+    city.country = req.body.country || city.country;
+    city.state = req.body.state || city.state;
+
+    // 🔹 image (optional) - using Cloudinary
+    if (req.file) {
+      const uploadResult = await uploadOnCloudinary(req.file.buffer);
+      city.image = uploadResult?.secure_url || city.image;
+    }
+
+    await city.save();
+
+    return res.status(200).json({
+      status: true,
+      message: "City updated successfully",
+      data: city,
+    });
+  } catch (error) {
+    console.error("updateCity error:", error);
+    return res.status(500).json({
+      status: false,
+      message: "Failed to update city",
+    });
+  }
+};
+
+
 export {
+  updateState,
+  updateCountry,
   createBlog,
   updateBlog,
   createCountry,
@@ -405,4 +725,14 @@ export {
   uploadEditorImage,
   getAllBlogs,
   getBlogById,
+  //harsh
+
+  getAllStates,
+  getCountryById,
+  getAllCountries,
+  getStateById,
+  //cities
+  getAllCities,
+  getCityById,
+  updateCity,
 };

@@ -3,6 +3,7 @@ const app = express();
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import authRoutes from "./routes/auth.routes.js";
 // import { app } from "./app.js";
 import { rateLimit } from 'express-rate-limit'
 
@@ -90,17 +91,19 @@ const limiter = rateLimit({
 import helmet from "helmet";
 
 
-// Initialize Passport
 configurePassport();
 app.use(passport.initialize());
 
-app.use(limiter);
+// Security
 app.use(helmet());
+app.use(limiter);
 
+// Routes
 app.use("/api/v1/contact", contactRoutes);
 app.use("/api/v1/user", userRoutes);
-app.use("/api/v1/admin",adminRoutes);
+app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/blog", blogRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api/v1", adventureRoutes);
 
 // Log router object for diagnostics at startup

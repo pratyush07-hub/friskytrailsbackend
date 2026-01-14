@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { verifyAdmin } from "../middlewares/verifyAdmin.js";
-import { createBlog, createCountry, getAllBlogs, getBlogById, getCountries, getCountryBySlug, getCountryWithBlogs, updateBlog, uploadEditorImage } from "../controllers/admin.controller.js";
+import { createBlog, createCountry, getAllBlogs, getAllCountries, getAllStates, getBlogById, getCountries, getCountryBySlug, getCountryById, getCountryWithBlogs, updateBlog, updateState, updateCountry, uploadEditorImage, getAllCities, getCityById, updateCity, getStateById } from "../controllers/admin.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { createState, getStates, getStateWithBlogs } from "../controllers/state.controller.js";
-import { createCity, getCities, getCityById, getCityWithBlogs } from "../controllers/city.controller.js";
+import { createCity, getCities, getCityWithBlogs } from "../controllers/city.controller.js";
 import { createProduct, deleteProduct, getProductById, getProductBySlug, getProducts, updateProduct } from "../controllers/product.controller.js";
 import { createBooking, getAllBookings, getBookingsByProduct } from "../controllers/booking.controller.js";
 import { createProductType, getAllProductTypes, getProductTypeById, getProductTypeBySlug, getProductTypeBySlugWithProduct } from "../controllers/productType.controller.js";
@@ -25,7 +25,7 @@ router.put("/blog/:id", upload.single("image"), verifyJWT, verifyAdmin, updateBl
 
 router.post("/upload-editor-image", upload.single("image"), verifyJWT, verifyAdmin, uploadEditorImage);
 router.post("/create-country", upload.single("image"), verifyJWT, verifyAdmin, createCountry);
-// router.get("/country/:slug", verifyJWT, getCountries);
+router.get("/country/:slug", verifyJWT, getCountries);
 router.post("/create-state", upload.single("image"), verifyJWT, verifyAdmin, createState);
 router.get("/countries", verifyJWT, getCountries);
 router.get("/states/:countryId", verifyJWT, getStates);
@@ -35,7 +35,88 @@ router.get("/country/:slug", verifyJWT, getCountryBySlug);
 router.get("/country/:slug/blogs", getCountryWithBlogs);
 router.get("/state/:slug/blogs", getStateWithBlogs);
 router.get("/city/:slug/blogs", getCityWithBlogs);
-router.get("/city/:id", getCityById);
+
+//HARSH ROUTES----------------------
+
+// ================= STATES ROUTES =================
+
+router.get(
+  "/states",
+  (req, res, next) => {
+    console.log(" state Route matched, going to next");
+    next();
+  },
+  getAllStates
+);
+
+router.get(
+  "/state/:id",
+  verifyJWT,
+  verifyAdmin, 
+  getStateById
+);
+
+// ================= COUNTRIES ROUTES =================
+
+router.get(
+  "/allcountries",
+  verifyJWT,
+  verifyAdmin, 
+  getAllCountries
+);
+
+router.get(
+  "/country/:id",
+  verifyJWT,
+  verifyAdmin, 
+  getCountryById
+);
+
+router.put(
+  "/country/:id",
+  verifyJWT,
+  verifyAdmin, 
+  upload.single("image"),
+  updateCountry
+);
+
+router.put(
+  "/state/:id",
+  verifyJWT,
+  verifyAdmin, 
+  upload.single("image"),
+  updateState
+);
+
+// ==========  CITIES ROUTES ============
+
+router.get(
+  "/cities",
+  (req, res, next) => {
+    console.log("Cities route matched, going to next");
+    next();
+  },
+  getAllCities
+);
+
+router.get(
+  "/city/:id",
+  verifyJWT,
+  verifyAdmin, 
+  getCityById
+);
+
+router.put(
+  "/city/:id",
+  verifyJWT,
+  verifyAdmin, 
+  upload.single("image"),
+  updateCity
+);
+
+
+
+
 
 router.post(
   "/create-product",
@@ -44,6 +125,7 @@ router.post(
   upload.array("images", 5),
   createProduct
 );
+
 router.get("/products", getProducts);
 router.route("/product/id/:id").get(verifyJWT, verifyAdmin, getProductById);
 router.get("/product/slug/:slug", getProductBySlug);
