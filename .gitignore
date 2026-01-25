@@ -37,9 +37,6 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
-<<<<<<< Updated upstream
 backend/credentials.json
-=======
 
 pyu.pem
->>>>>>> Stashed changes
