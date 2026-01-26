@@ -1,19 +1,11 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 
 export const sendOTPEmail = async (email, otp) => {
-  const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS, // Gmail App Password
-    },
-    connectionTimeout: 10000,
-  });
-
-  await transporter.sendMail({
-    from: `"FriskyTrails" <${process.env.EMAIL_USER}>`,
+  await resend.emails.send({
+    from: "FriskyTrails <onboarding@resend.dev>",
     to: email,
     subject: "Your OTP Verification Code",
     html: `
@@ -24,4 +16,3 @@ export const sendOTPEmail = async (email, otp) => {
     `,
   });
 };
-
